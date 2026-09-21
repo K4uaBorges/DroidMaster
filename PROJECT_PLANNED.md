@@ -728,39 +728,7 @@ Durante o desenvolvimento deverão ser respeitadas as seguintes regras:
 
 ---
 
-# 19. Plano de Desenvolvimento
-
-O projeto será desenvolvido de forma incremental.
-
-| Fase | Tarefa | Descrição | Responsável | Estado |
-|---|---|---|---|---|
-| 1 | Análise dos requisitos | Analisar o enunciado e identificar todos os requisitos | A definir | Planeado |
-| 2 | Definição da arquitetura | Definir MVC, componentes e fluxo de dados | A definir | Planeado |
-| 3 | Estrutura do projeto | Criar estrutura inicial das pastas e classes | A definir | Planeado |
-| 4 | Configuração da Application | Configurar a classe Application e dependências | A definir | Planeado |
-| 5 | Modelos | Criar modelos de dados | A definir | Planeado |
-| 6 | Room | Criar entidades, DAOs e base de dados | A definir | Planeado |
-| 7 | DataStore | Implementar armazenamento da API Key | A definir | Planeado |
-| 8 | Ktor | Configurar Ktor Client | A definir | Planeado |
-| 9 | Gemini API | Implementar comunicação com Gemini | A definir | Planeado |
-| 10 | Serialization | Implementar serialização dos pedidos e respostas | A definir | Planeado |
-| 11 | Contexto | Implementar construção do contexto das conversas | A definir | Planeado |
-| 12 | Title | Implementar ecrã principal | A definir | Planeado |
-| 13 | Chat History | Implementar histórico de conversas | A definir | Planeado |
-| 14 | Active Chat | Implementar interação com o mentor | A definir | Planeado |
-| 15 | Settings | Implementar configuração da API Key | A definir | Planeado |
-| 16 | About | Implementar informação da aplicação | A definir | Planeado |
-| 17 | Offline | Implementar comportamento offline-first | A definir | Planeado |
-| 18 | Erros | Implementar tratamento de erros HTTP e rede | A definir | Planeado |
-| 19 | Integração | Integrar todas as componentes | A definir | Planeado |
-| 20 | Testes | Testar funcionalidades e casos de erro | A definir | Planeado |
-| 21 | Correções | Corrigir problemas encontrados durante os testes | A definir | Planeado |
-| 22 | Documentação | Finalizar README e documentação | A definir | Planeado |
-| 23 | Preparação da entrega | Preparar versão final do projeto | A definir | Planeado |
-
----
-
-# 20. Dependências entre Tarefas
+# 19. Dependências entre Tarefas
 
 Algumas tarefas dependem da conclusão de tarefas anteriores.
 
@@ -808,209 +776,10 @@ Estrutura do projeto
 
 A interface poderá ser desenvolvida em paralelo com partes do backend da aplicação, desde que as interfaces entre os componentes estejam previamente definidas.
 
----
 
-# 21. Distribuição das Responsabilidades
+# 20. Diagramas da Arquitetura
 
-As tarefas serão distribuídas pelos membros do grupo.
-
-| Membro | Responsabilidades principais |
-|---|---|
-| Membro 1 | A definir |
-| Membro 2 | A definir |
-| Membro 3 | A definir |
-| Membro 4 | A definir |
-
-A distribuição final será definida de acordo com as competências de cada membro e com o calendário do projeto.
-
-Cada tarefa deverá ter pelo menos um responsável definido.
-
----
-
-# 22. Timeline do Projeto
-
-O desenvolvimento terá como data final de entrega:
-
-**12 de dezembro de 2026**
-
-O projeto será dividido em várias fases ao longo do semestre:
-
-```text
-SETEMBRO
-│
-├── Análise dos requisitos
-├── Arquitetura
-├── Planeamento
-└── Estrutura inicial
-        |
-        v
-OUTUBRO
-│
-├── Modelos
-├── Room
-├── DataStore
-├── Ktor
-├── Gemini API
-└── Serialization
-        |
-        v
-NOVEMBRO
-│
-├── Contexto das conversas
-├── Title
-├── Chat History
-├── Active Chat
-├── Settings
-├── About
-└── Offline-first
-        |
-        v
-INÍCIO DE DEZEMBRO
-│
-├── Tratamento de erros
-├── Integração
-├── Testes
-├── Correções
-├── Documentação
-└── Preparação da entrega
-        |
-        v
-12 DE DEZEMBRO
-│
-└── ENTREGA FINAL
-```
-
-As datas específicas de cada tarefa serão ajustadas de acordo com o plano da disciplina e os milestones definidos pelo professor.
-
----
-
-# 23. Milestones
-
-## Milestone 1 — Planeamento
-
-Objetivos:
-
-- Analisar o enunciado.
-- Definir os requisitos.
-- Definir a arquitetura.
-- Definir a estrutura inicial do projeto.
-- Criar o Project Plan.
-- Identificar os membros do grupo.
-- Definir responsáveis pelas tarefas.
-- Criar o README.
-- Criar a tag `mentor_1`.
-
-### Deliverables
-
-- `README.md`
-- `PROJECT_PLAN.md`
-- Timeline do projeto
-- Distribuição de tarefas
-- Estrutura inicial do projeto
-- Arquitetura inicial
-
----
-
-## Milestone 2 — Estrutura e Comunicação
-
-Objetivos:
-
-- Criar a estrutura base da aplicação.
-- Configurar a Application.
-- Configurar Ktor.
-- Configurar Kotlinx Serialization.
-- Criar modelos.
-- Implementar a comunicação inicial com Gemini.
-
-### Deliverables
-
-- Estrutura Android funcional.
-- Modelos.
-- Ktor Client.
-- Comunicação inicial com Gemini.
-
----
-
-## Milestone 3 — Persistência e Conversações
-
-Objetivos:
-
-- Implementar Room.
-- Criar entidades e DAOs.
-- Criar armazenamento das conversas.
-- Criar armazenamento das mensagens.
-- Implementar construção do contexto.
-
-### Deliverables
-
-- Base de dados Room.
-- Histórico de conversas.
-- Persistência de mensagens.
-- Construção do contexto da conversa.
-
----
-
-## Milestone 4 — Interface
-
-Objetivos:
-
-- Implementar Title.
-- Implementar Chat History.
-- Implementar Active Chat.
-- Implementar Settings.
-- Implementar About.
-
-### Deliverables
-
-- Interface funcional.
-- Navegação entre os ecrãs.
-- Integração da interface com o Controller.
-
----
-
-## Milestone 5 — Offline e Tratamento de Erros
-
-Objetivos:
-
-- Implementar verificação de conectividade.
-- Garantir acesso offline ao histórico.
-- Implementar tratamento de erros HTTP.
-- Implementar tratamento de erros de rede.
-- Melhorar mensagens apresentadas ao utilizador.
-
-### Deliverables
-
-- Comportamento offline-first.
-- Tratamento de erros.
-- Feedback adequado ao utilizador.
-
----
-
-## Milestone 6 — Integração e Entrega
-
-Objetivos:
-
-- Integrar todos os componentes.
-- Realizar testes.
-- Corrigir erros.
-- Rever arquitetura.
-- Finalizar documentação.
-- Preparar a versão final.
-
-### Deliverables
-
-- Aplicação final.
-- Código revisto.
-- Testes realizados.
-- README final.
-- Documentação.
-- Versão final para entrega.
-
----
-
-# 24. Diagramas da Arquitetura
-
-## 24.1 Diagrama MVC
+## 20.1 Diagrama MVC
 
 O diagrama MVC deverá representar a comunicação entre:
 
@@ -1028,7 +797,7 @@ bem como a interação do Controller com as componentes responsáveis pela persi
 
 ---
 
-## 24.2 Diagrama da Arquitetura
+## 20.2 Diagrama da Arquitetura
 
 O diagrama completo deverá representar:
 
@@ -1060,7 +829,7 @@ O diagrama completo deverá representar:
 
 ---
 
-# 25. Critérios de Organização do Código
+# 21. Critérios de Organização do Código
 
 Para manter o projeto organizado:
 
@@ -1076,7 +845,7 @@ Para manter o projeto organizado:
 
 ---
 
-# 26. Critérios de Qualidade
+# 22. Critérios de Qualidade
 
 Durante o desenvolvimento serão considerados os seguintes critérios:
 
