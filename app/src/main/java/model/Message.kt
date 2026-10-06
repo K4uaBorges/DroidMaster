@@ -1,11 +1,13 @@
 package model
 
+import kotlin.uuid.Uuid
+
 data class Message(
-    val id: Long,
-    val conversationId: Long,
+    val order: Long,
+    val conversationId: Uuid,
     val role: Author,
     val text: String,
-    val timestamp: Long
+    val timestamp: Long = System.currentTimeMillis()
 ){
     init {
         require(text.isNotBlank()) { "A mensagem não pode estar vazia." }

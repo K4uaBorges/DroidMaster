@@ -24,5 +24,5 @@ data class MessageEntity(
     val conversationId: Uuid,
     val text: String,
     val author: String,
-    val createdAtMillis: Long = System.currentTimeMillis()
+    val timestamp: Long
 )

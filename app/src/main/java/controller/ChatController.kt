@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import model.Author
 import model.Message
+import kotlin.uuid.Uuid
 
 data class ChatViewState(
     val messageText: String = "",
@@ -16,7 +17,7 @@ class ChatController {
     var screenState by mutableStateOf(ChatViewState())
         private set
 
-    private val conversationId = 1L
+    private val conversationId = Uuid.random()
 
     fun changeMessageText(nextText: String) {
         screenState = screenState.copy(
@@ -37,7 +38,7 @@ class ChatController {
         val nextId = screenState.messages.size.toLong() + 1
 
         val userMessage = Message(
-            id = nextId,
+            order = nextId,
             conversationId = conversationId,
             role = Author.USER,
             text = textToSend,
@@ -45,7 +46,7 @@ class ChatController {
         )
 
         val droidMasterMessage = Message(
-            id = nextId + 1,
+            order = nextId + 1,
             conversationId = conversationId,
             role = Author.MODEL,
             text = "Mensagem $messageNumber recebida",

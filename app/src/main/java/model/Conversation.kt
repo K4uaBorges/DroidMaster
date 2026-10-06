@@ -1,7 +1,9 @@
 package model
 
+import kotlin.uuid.Uuid
+
 data class Conversation (
-    val id: String,
+    val id: Uuid,
     val title: String,
     val createdAt: String
 ){

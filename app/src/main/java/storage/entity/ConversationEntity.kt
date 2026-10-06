@@ -9,6 +9,6 @@ data class ConversationEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Uuid,
     val title: String,
-    val createdAtMillis: Long = System.currentTimeMillis(),
-    val updatedAtMillis: Long = createdAtMillis
+    val createdAt: String
+
 )

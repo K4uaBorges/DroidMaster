@@ -19,6 +19,7 @@ mongodbDriverKotlinSync = "5.13.0"
 okio = "3.18.2"
 roomCommon = "2.8.5"
 room3Runtime = "3.0.3"
+compiler = "3.2.0-alpha11"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -48,6 +49,7 @@ mongodb-driver-kotlin-sync = { module = "org.mongodb:mongodb-driver-kotlin-sync"
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 androidx-room-common = { group = "androidx.room", name = "room-common", version.ref = "roomCommon" }
 androidx-room3-runtime = { group = "androidx.room3", name = "room3-runtime", version.ref = "room3Runtime" }
+androidx-compiler = { group = "androidx.databinding", name = "compiler", version.ref = "compiler" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

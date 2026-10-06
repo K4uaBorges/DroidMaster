@@ -882,6 +882,90 @@ A aplicação deverá fornecer feedback adequado quando:
 - A API Key não está configurada.
 - Ocorre outro problema de comunicação.
 
+# Adendas do Projeto
+
+Nesta Secção são colocada adendas e ideas que tivemos conforme avançamos com o projeto
+
+- Botão de Partilha, para uma outra ia ou até mesmo para uma pessoa
+
+
+## Botão de Patilha
+
+### Ideia Principal
+
+Criar uma aplicação Android que permita conversar com uma IA, guardar o histórico localmente com Room Database e partilhar ou transportar conversas.
+A conversa deve pertencer à aplicação e não a uma IA específica. Assim, o utilizador pode começar uma conversa com uma IA e continuar depois com outra.
+Funcionalidades Principais
+
+- Guardar conversas e mensagens no Room Database.
+
+
+- Identificar qual IA respondeu a cada mensagem.
+
+- Permitir trocar de IA sem perder o histórico.
+
+- Partilhar conversas com pessoas.
+
+- Exportar conversas para ficheiro.
+
+- Usar Markdown como formato comum de partilha.
+
+- Permitir conversas ou mensagens temporárias.
+  Partilha
+  Será usado um conceito Shared com dois tipos:
+  Tipo	Função
+  People	Partilhar a conversa com outra pessoa
+  File	Exportar a conversa para ficheiro
+
+
+Nos dois casos, a conversa será convertida para Markdown.
+
+O SharedButton será apenas responsável por iniciar a ação de partilha. A lógica fica separada da interface.
+Markdown
+
+O Markdown será o único formato de texto usado porque:
+
+- É simples.
+
+- É legível.
+
+- É fácil de partilhar.
+
+- Pode ser enviado para outra IA.
+
+- Pode ser guardado como ficheiro .md.
+  Eficiência
+  Não será carregada a conversa inteira para memória.
+  A aplicação usará apenas o identificador da conversa para ir buscar as mensagens à base de dados.
+  As mensagens serão processadas em partes e escritas diretamente no ficheiro Markdown.
+  Isto evita uso excessivo de RAM em conversas grandes.
+  Conversas Temporárias
+  Conversas e mensagens podem ter uma data de expiração.
+  Depois dessa data:
+- 
+- deixam de aparecer;
+
+- deixam de ser enviadas para a IA;
+
+- deixam de ser incluídas numa partilha;
+
+- podem ser apagadas posteriormente da base de dados.
+  Problemas e Soluções
+  Problema	Solução
+  Conversas grandes ocupam muita RAM	Ler mensagens por partes
+  Partilha de texto demasiado grande	Criar ficheiro Markdown
+  Trocar de IA pode perder contexto	Guardar o histórico na aplicação
+  APIs usam formatos diferentes	Criar um formato interno comum
+  Mensagens temporárias precisam de expirar	Guardar uma data de expiração
+  Chaves de API podem ficar expostas	Usar backend ou solução segura
+
+
+Fluxo Geral
+Conversa → Room Database → Markdown → People ou File
+Para outra IA:
+Room Database → histórico da conversa → adaptação para a nova API → nova resposta → guardar novamente no Room
+Objetivo Final
+Ter uma aplicação Android onde o histórico é controlado pela própria aplicação, permitindo trocar de IA, partilhar conversas e exportá-las sem depender de um único fornecedor.
 
 # Referencias
 
