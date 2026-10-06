@@ -45,6 +45,8 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.room.common)
+    implementation(libs.androidx.room3.runtime)
     implementation(libs.firebase.ai)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.ktor.client.core)
@@ -59,4 +61,8 @@ dependencies {
     debugImplementation(platform(libs.androidx.compose.bom))
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+    implementation(libs.log4j.slf4j2.impl)
+    implementation(libs.mongodb.driver.kotlin.sync)
+    implementation(libs.okio)
+    implementation(libs.mongodb.driver.kotlin.coroutine)
 }
