@@ -1,9 +1,9 @@
 package model
 
 data class Conversation (
-    val id: String,
+    val id: Long,
     val title: String,
-    val createdAt: String
+    val createdAt: Long
 ){
     init {
         require(title.isNotBlank()) { "A conversa tem de ter título." }
