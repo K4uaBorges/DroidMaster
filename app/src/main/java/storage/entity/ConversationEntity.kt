@@ -2,12 +2,11 @@ package storage.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import kotlin.uuid.Uuid
 
 @Entity(tableName = "conversations")
 data class ConversationEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Uuid,
+    @PrimaryKey
+    val id: String,
     val title: String,
-    val createdAt: String
+    val createdAt: Long
 )

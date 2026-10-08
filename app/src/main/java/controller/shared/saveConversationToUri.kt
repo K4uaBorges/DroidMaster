@@ -1,27 +1,25 @@
-package controller.shared
+﻿package controller.shared
 
 import android.content.Context
 import android.net.Uri
 import controller.utis.conversationToMarkdown
-import storage.dao.MessageDao
+import storage.repository.ConversationRepository
 import kotlin.uuid.Uuid
 
 suspend fun saveConversationToUri(
     context: Context,
     uri: Uri,
     conversationId: Uuid,
-    messageDao: MessageDao
+    repository: ConversationRepository
 ) {
 
-    context.contentResolver
-        .openOutputStream(uri)
-        ?.bufferedWriter()
-        ?.use { writer ->
-
-            conversationToMarkdown(
-                conversationId = conversationId,
-                messageDao = messageDao,
-                writer = writer
-            )
-        }
+    val output = context.contentResolver.openOutputStream(uri)
+        ?: throw java.io.IOException("Não foi possível abrir o ficheiro de destino.")
+    output.bufferedWriter().use { writer ->
+        conversationToMarkdown(
+            conversationId = conversationId,
+            repository = repository,
+            writer = writer
+        )
+    }
 }

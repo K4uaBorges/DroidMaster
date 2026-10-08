@@ -2,11 +2,7 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
 
     <cache-path
-        name="shared_cache"
-        path="." />
-
-    <files-path
-        name="conversation_files"
-        path="conversations/" />
+        name="shared_conversations"
+        path="shared_conversations/" />
 
 </paths>

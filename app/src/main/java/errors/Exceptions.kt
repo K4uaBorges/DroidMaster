@@ -1,5 +1,6 @@
 package errors
 
-sealed class Error(val msg : String) : Throwable()
+sealed class Error(msg : String) : Exception(msg)
 
-class MongoClientException(msg: String): Error(msg)
+class GeminiHttpException(val statusCode: Int) : Error("Gemini HTTP $statusCode")
+class GeminiEmptyResponseException : Error("O Gemini não devolveu uma resposta de texto.")

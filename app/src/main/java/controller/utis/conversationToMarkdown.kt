@@ -1,13 +1,13 @@
-package controller.utis
+﻿package controller.utis
 
 import model.Author
-import storage.dao.MessageDao
+import storage.repository.ConversationRepository
 import java.io.Writer
 import kotlin.uuid.Uuid
 
 suspend fun conversationToMarkdown(
     conversationId: Uuid,
-    messageDao: MessageDao,
+    repository: ConversationRepository,
     writer: Writer
 ) {
     val pageSize = 100
@@ -15,7 +15,7 @@ suspend fun conversationToMarkdown(
 
     while (true) {
 
-        val messages = messageDao.getMessagesPage(
+        val messages = repository.getMessagesPage(
             conversationId = conversationId,
             limit = pageSize,
             offset = offset

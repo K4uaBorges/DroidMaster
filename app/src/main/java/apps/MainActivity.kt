@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import controller.ChatController
 import controller.ConversationController
+import controller.SharedController
 import view.chat.ActiveChatScreenMain
 import view.history.ChatHistoryScreenMain
 import view.title.TitleScreenMain
@@ -27,7 +28,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             DroidMasterApp(
                 chatController = droidMasterApplication.chatController,
-                conversationController = droidMasterApplication.conversationController
+                conversationController = droidMasterApplication.conversationController,
+                sharedController = droidMasterApplication.sharedController
             )
         }
     }
@@ -44,7 +46,8 @@ enum class Screen{
 @Composable
 fun DroidMasterApp(
     chatController: ChatController,
-    conversationController: ConversationController
+    conversationController: ConversationController,
+    sharedController: SharedController
 ) {
 
     var currentScreen by remember {
@@ -72,6 +75,8 @@ fun DroidMasterApp(
         Screen.ACTIVE_CHAT -> {
             ActiveChatScreenMain(
                 controller = chatController,
+                conversationId = conversationController.screenState.currentConversationId,
+                sharedController = sharedController,
                 onHistoryClick = {
                     currentScreen = Screen.HISTORY
                     previousScreen = Screen.ACTIVE_CHAT
@@ -93,8 +98,9 @@ fun DroidMasterApp(
                     currentScreen = Screen.TITLE
                 },
                 onBackClick = {
-                    previousScreen
-                }
+                    currentScreen = previousScreen
+                },
+                errorMessage = conversationController.screenState.error
             )
         }
 

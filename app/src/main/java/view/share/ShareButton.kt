@@ -9,18 +9,20 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
-import controller.shareWithPeople
-import controller.shared.saveConversationToUri
+import androidx.compose.ui.Modifier
+import android.widget.Toast
+import controller.SharedController
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import model.Shared
-import storage.dao.MessageDao
 import kotlin.uuid.Uuid
 
 @Composable
 fun SharedButton(
     conversationId: Uuid,
     destination: Shared,
-    messageDao: MessageDao
+    controller: SharedController,
+    modifier: Modifier = Modifier
 ) {
 
     val context = LocalContext.current
@@ -36,17 +38,18 @@ fun SharedButton(
             uri ?: return@rememberLauncherForActivityResult
 
             scope.launch {
-
-                saveConversationToUri(
-                    context = context,
-                    uri = uri,
-                    conversationId = conversationId,
-                    messageDao = messageDao
-                )
+                try {
+                    controller.saveToUri(context, uri, conversationId)
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (_: Exception) {
+                    Toast.makeText(context, "Não foi possível guardar a conversa.", Toast.LENGTH_LONG).show()
+                }
             }
         }
 
     IconButton(
+        modifier = modifier,
         onClick = {
 
             when (destination) {
@@ -54,12 +57,13 @@ fun SharedButton(
                 is Shared.People -> {
 
                     scope.launch {
-
-                        shareWithPeople(
-                            context = context,
-                            conversationId = conversationId,
-                            messageDao = messageDao
-                        )
+                        try {
+                            controller.shareWithPeople(context, conversationId)
+                        } catch (error: CancellationException) {
+                            throw error
+                        } catch (_: Exception) {
+                            Toast.makeText(context, "Não foi possível partilhar a conversa.", Toast.LENGTH_LONG).show()
+                        }
                     }
                 }
 

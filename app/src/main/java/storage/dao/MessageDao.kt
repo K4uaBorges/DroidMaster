@@ -5,41 +5,42 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
-import model.Message
 import storage.entity.MessageEntity
-import kotlin.uuid.Uuid
 
 @Dao
 interface MessageDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insert(message: MessageEntity): Uuid
+    suspend fun insert(message: MessageEntity)
 
     @Query(
         "SELECT * FROM messages " +
                 "WHERE conversationId = :conversationId " +
-                "ORDER BY timestamp ASC"
+                "ORDER BY messageOrder ASC"
     )
 
     fun observeByConversationId(
-        conversationId: Uuid
+        conversationId: String
     ): Flow<List<MessageEntity>>
 
     @Query("SELECT * FROM messages " +
                    "WHERE conversationId = :conversationId " +
-                   "ORDER BY timestamp ASC")
+                   "ORDER BY messageOrder ASC")
     suspend fun getByConversationId(
-        conversationId: Uuid
+        conversationId: String
     ): List<MessageEntity>
 
     @Query("""
     SELECT * FROM messages
     WHERE conversationId = :conversationId
-    ORDER BY timestamp ASC
+    ORDER BY messageOrder ASC
     LIMIT :limit OFFSET :offset
 """)
     suspend fun getMessagesPage(
-        conversationId: Uuid,
+        conversationId: String,
         limit: Int,
         offset: Int
-    ): List<Message>
+    ): List<MessageEntity>
+
+    @Query("SELECT COALESCE(MAX(messageOrder), 0) FROM messages WHERE conversationId = :conversationId")
+    suspend fun lastOrder(conversationId: String): Long
 }

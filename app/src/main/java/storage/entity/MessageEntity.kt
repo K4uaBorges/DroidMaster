@@ -1,10 +1,10 @@
 package storage.entity
 
 import androidx.room.Entity
+import androidx.room.ColumnInfo
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import kotlin.uuid.Uuid
 
 @Entity(
     tableName = "messages",
@@ -16,13 +16,15 @@ import kotlin.uuid.Uuid
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("conversationId")]
+    indices = [Index(value = ["conversationId", "messageOrder"], unique = true)]
 )
 data class MessageEntity(
     @PrimaryKey(autoGenerate = true)
-    val id: Uuid,
-    val conversationId: Uuid,
+    val id: Long = 0,
+    val conversationId: String,
+    @ColumnInfo(name = "messageOrder")
+    val order: Long,
     val text: String,
-    val author: String,
+    val role: String,
     val timestamp: Long
 )

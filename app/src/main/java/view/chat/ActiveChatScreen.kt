@@ -30,7 +30,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.sp
 import controller.ChatController
+import controller.SharedController
 import model.Message
+import model.Shared
+import view.share.SharedButton
+import kotlin.uuid.Uuid
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -38,6 +42,8 @@ import java.util.Locale
 @Composable
 fun ActiveChatScreenMain(
     controller: ChatController,
+    conversationId: Uuid?,
+    sharedController: SharedController,
     onHistoryClick: () -> Unit,         // "ActiveChatScreen, quando alguém quiser abrir o histórico, executa esta função."
     modifier: Modifier = Modifier
 ) {
@@ -55,7 +61,9 @@ fun ActiveChatScreenMain(
         ) {
 
             ChatHeader(
-                onMenuClick = onHistoryClick
+                onMenuClick = onHistoryClick,
+                conversationId = conversationId,
+                sharedController = sharedController
             )
 
             ChatMessages(
@@ -78,13 +86,16 @@ fun ActiveChatScreenMain(
                     }
                 )
             }
+            state.error?.let { Text(text = it, modifier = Modifier.padding(12.dp)) }
         }
     }
 }
 
 @Composable
 fun ChatHeader(
-    onMenuClick: () -> Unit
+    onMenuClick: () -> Unit,
+    conversationId: Uuid?,
+    sharedController: SharedController
 ) {
     Box(
         modifier = Modifier
@@ -116,6 +127,14 @@ fun ChatHeader(
                 .height(60.dp),
             contentScale = ContentScale.Fit
         )
+        if (conversationId != null) {
+            SharedButton(
+                conversationId = conversationId,
+                destination = Shared.People(),
+                controller = sharedController,
+                modifier = Modifier.align(Alignment.CenterEnd)
+            )
+        }
     }
 }
 

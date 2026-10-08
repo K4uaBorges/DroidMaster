@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.google.gms.google.services)
 }
 
@@ -34,6 +36,9 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -55,8 +60,9 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.room.common)
-    implementation(libs.androidx.room3.runtime)
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.kotlinx.coroutines.android)
     implementation(libs.firebase.ai)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.ktor.client.core)
@@ -64,6 +70,10 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.ktor.client.mock)
+    testImplementation(libs.ktor.client.java)
     implementation("androidx.compose.material:material-icons-extended")
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
@@ -76,4 +86,20 @@ dependencies {
     implementation(libs.mongodb.driver.kotlin.sync)
     implementation(libs.okio)
     implementation(libs.mongodb.driver.kotlin.coroutine)
+}
+
+ksp {
+    arg("room.schemaLocation", file("schemas").absolutePath)
+}
+
+tasks.withType<Test>().configureEach {
+    systemProperty("gemini.liveTests", providers.gradleProperty("geminiLiveTests").orElse("false").get())
+    systemProperty("gemini.model", providers.gradleProperty("geminiModel").orElse("").get())
+    val envFile = project.file("DroidMaster.env").takeIf { it.isFile }
+        ?: rootProject.file("DroidMaster.env")
+    systemProperty("gemini.envFile", envFile.absolutePath)
+    // Live results must not be reused: each explicit invocation contacts Gemini.
+    if (providers.gradleProperty("geminiLiveTests").orNull == "true") {
+        outputs.upToDateWhen { false }
+    }
 }

@@ -105,7 +105,7 @@ fun TitleScreenMain(
                     ),
                     keyboardActions = KeyboardActions(
                         onSend = {
-                            if (state.messageText.isNotBlank()) {
+                            if (state.messageText.isNotBlank() && !state.isSending) {
                                 controller.sendMessage()
                                 onStartChatClick()
                             }
@@ -117,7 +117,7 @@ fun TitleScreenMain(
                                 controller.sendMessage()
                                 onStartChatClick()
                             },
-                            enabled = state.messageText.isNotBlank()
+                            enabled = state.messageText.isNotBlank() && !state.isSending
                         ) {
                             Text(">")
                         }

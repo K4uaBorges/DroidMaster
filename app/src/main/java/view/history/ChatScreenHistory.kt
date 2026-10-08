@@ -18,15 +18,17 @@ import model.Conversation
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.uuid.Uuid
 
 
 @Composable
 fun ChatHistoryScreenMain(
     conversations: List<Conversation>,
-    onConversationClick: (Long) -> Unit,
+    onConversationClick: (Uuid) -> Unit,
     onNewConversationClick: () -> Unit,
     onBackClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    errorMessage: String? = null
 ) {
 
     Scaffold(
@@ -40,6 +42,7 @@ fun ChatHistoryScreenMain(
                 .fillMaxSize()
         ) {
             Text("Histórico de Conversas")
+            errorMessage?.let { Text(it) }
 
             Button(
                 onClick = onNewConversationClick,

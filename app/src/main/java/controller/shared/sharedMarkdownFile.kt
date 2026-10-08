@@ -5,10 +5,10 @@ import android.content.Intent
 import androidx.core.content.FileProvider
 import java.io.File
 
-fun shareMarkdownFile(
+fun createMarkdownShareIntent(
     context: Context,
     file: File
-) {
+): Intent {
 
     val uri = FileProvider.getUriForFile(
         context,
@@ -16,7 +16,7 @@ fun shareMarkdownFile(
         file
     )
 
-    val intent = Intent(Intent.ACTION_SEND).apply {
+    return Intent(Intent.ACTION_SEND).apply {
 
         type = "text/markdown"
 
@@ -30,6 +30,10 @@ fun shareMarkdownFile(
         )
     }
 
+}
+
+fun shareMarkdownFile(context: Context, file: File) {
+    val intent = createMarkdownShareIntent(context, file)
     context.startActivity(
         Intent.createChooser(
             intent,

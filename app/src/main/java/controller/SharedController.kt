@@ -1,25 +1,26 @@
-package controller
+﻿package controller
 
 import android.content.Context
+import android.net.Uri
 import controller.shared.createTemporaryMarkdownFile
+import controller.shared.saveConversationToUri
 import controller.shared.shareMarkdownFile
-import storage.dao.MessageDao
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import storage.repository.ConversationRepository
 import kotlin.uuid.Uuid
 
-suspend fun shareWithPeople(
-    context: Context,
-    conversationId: Uuid,
-    messageDao: MessageDao
-) {
+class SharedController(private val repository: ConversationRepository) {
+    suspend fun shareWithPeople(context: Context, conversationId: Uuid) {
+        val file = withContext(Dispatchers.IO) {
+            createTemporaryMarkdownFile(context, conversationId, repository)
+        }
+        shareMarkdownFile(context, file)
+    }
 
-    val file = createTemporaryMarkdownFile(
-        context = context,
-        conversationId = conversationId,
-        messageDao = messageDao
-    )
-
-    shareMarkdownFile(
-        context = context,
-        file = file
-    )
+    suspend fun saveToUri(context: Context, uri: Uri, conversationId: Uuid) {
+        withContext(Dispatchers.IO) {
+            saveConversationToUri(context, uri, conversationId, repository)
+        }
+    }
 }

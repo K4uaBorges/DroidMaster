@@ -2,8 +2,8 @@ package storage
 
 import android.content.Context
 import androidx.room.Database
-import androidx.room3.Room
-import androidx.room3.RoomDatabase
+import androidx.room.Room
+import androidx.room.RoomDatabase
 import storage.dao.ConversationDao
 import storage.dao.MessageDao
 import storage.entity.ConversationEntity
@@ -15,7 +15,7 @@ import storage.entity.MessageEntity
         MessageEntity::class
     ],
     version = 1,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
 
