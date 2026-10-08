@@ -17,7 +17,7 @@ interface ConversationDao {
     @Update
     suspend fun update(conversation: ConversationEntity)
 
-    @Query("SELECT * FROM conversations ORDER BY updatedAtMillis DESC")
+    @Query("SELECT * FROM conversations ORDER BY createdAt DESC")
     fun observeAll(): Flow<List<ConversationEntity>>
 
     @Query("SELECT * FROM conversations WHERE id = :id")

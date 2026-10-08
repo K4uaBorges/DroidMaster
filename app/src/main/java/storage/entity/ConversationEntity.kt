@@ -10,5 +10,4 @@ data class ConversationEntity(
     val id: Uuid,
     val title: String,
     val createdAt: String
-
 )
