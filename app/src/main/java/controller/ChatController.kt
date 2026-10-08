@@ -3,6 +3,7 @@ package controller
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import apps.DroidMasterApp
 import model.Author
 import model.Message
 import kotlin.uuid.Uuid
@@ -12,10 +13,14 @@ data class ChatViewState(
     val messages: List<Message> = emptyList()
 )
 
-class ChatController {
+class ChatController(
+    private val conversationController: ConversationController
+) {
 
     var screenState by mutableStateOf(ChatViewState())
         private set
+
+    private val messagesByConversation = mutableMapOf<Uuid, List<Message>>()
 
     private val conversationId = Uuid.random()
 
@@ -31,7 +36,12 @@ class ChatController {
         if (textToSend.isEmpty()) {
             return
         }
-        val messageNumber = screenState.messages.count {
+
+        val conversationId = getOrCreateConversation(textToSend)
+
+        val currentMessages = messagesByConversation[conversationId] ?: emptyList()
+
+        val messageNumber = currentMessages.count{
             it.role == Author.USER
         } + 1
 
@@ -39,6 +49,7 @@ class ChatController {
 
         val userMessage = Message(
             order = nextId,
+            id = nextMessageId++,
             conversationId = conversationId,
             role = Author.USER,
             text = textToSend,
@@ -47,18 +58,56 @@ class ChatController {
 
         val droidMasterMessage = Message(
             order = nextId + 1,
+            id = nextMessageId++,
             conversationId = conversationId,
             role = Author.MODEL,
             text = "Mensagem $messageNumber recebida",
             timestamp = System.currentTimeMillis()
         )
 
+        val nextMessages = currentMessages + listOf(
+            userMessage,
+            droidMasterMessage
+        )
+
+        messagesByConversation[conversationId] = nextMessages
+
         screenState = screenState.copy(
             messageText = "",
-            messages = screenState.messages + listOf(
-                userMessage,
-                droidMasterMessage
-            )
+            messages = nextMessages
         )
+    }
+
+    fun openConversation(conversationId: Long) {
+        conversationController.selectConversation(
+            conversationId
+        )
+
+        screenState = ChatViewState(
+            messages = messagesByConversation[conversationId] ?: emptyList()
+        )
+    }
+
+    fun newConversation() {
+        conversationController.newConversation()
+
+        screenState = ChatViewState()
+    }
+
+    private fun getOrCreateConversation(
+        firstMessage: String
+    ): Long {
+
+        val currentConversationId =
+            conversationController
+                .screenState
+                .currentConversationId
+
+        if (currentConversationId != null) {
+            return currentConversationId
+        }
+
+        return conversationController
+            .createConversation(firstMessage)
     }
 }
