@@ -49,7 +49,6 @@ class ChatController(
 
         val userMessage = Message(
             order = nextId,
-            id = nextMessageId++,
             conversationId = conversationId,
             role = Author.USER,
             text = textToSend,
@@ -58,7 +57,6 @@ class ChatController(
 
         val droidMasterMessage = Message(
             order = nextId + 1,
-            id = nextMessageId++,
             conversationId = conversationId,
             role = Author.MODEL,
             text = "Mensagem $messageNumber recebida",
@@ -78,7 +76,7 @@ class ChatController(
         )
     }
 
-    fun openConversation(conversationId: Long) {
+    fun openConversation(conversationId: Uuid) {
         conversationController.selectConversation(
             conversationId
         )
@@ -96,14 +94,14 @@ class ChatController(
 
     private fun getOrCreateConversation(
         firstMessage: String
-    ): Long {
+    ): Uuid {
 
         val currentConversationId =
             conversationController
                 .screenState
                 .currentConversationId
 
-        if (currentConversationId != null) {
+        if (currentConversationId != Uuid) {
             return currentConversationId
         }
 

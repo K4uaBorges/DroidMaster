@@ -5,29 +5,28 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import io.ktor.util.date.getTimeMillis
 import model.Conversation
+import kotlin.uuid.Uuid
 
 data class ConversationViewState(
     val conversations: List<Conversation> = emptyList(),
-    val currentConversationId: Long? = null
+    val currentConversationId: Uuid
 )
 
 class ConversationController{
     var screenState by mutableStateOf(
-        ConversationViewState()
+        ConversationViewState(currentConversationId = Uuid.random())
     )
         private set
 
-    private var nextConversationId = 1L
+    fun createConversation(firstMessage: String): Uuid {
 
-    fun createConversation(firstMessage: String): Long {
+        val nextConversationId = Uuid.random()
 
         val conversation = Conversation(
             id = nextConversationId,
             title = createTitle(firstMessage),
             createdAt = System.currentTimeMillis()
         )
-
-        nextConversationId++
 
         screenState = screenState.copy(
             conversations = listOf(conversation) + screenState.conversations,
@@ -37,7 +36,7 @@ class ConversationController{
         return conversation.id
     }
 
-    fun selectConversation(conversationId: Long) {
+    fun selectConversation(conversationId: Uuid) {
 
         val conversationExists = screenState.conversations.any{
             it.id == conversationId
@@ -54,7 +53,7 @@ class ConversationController{
 
     fun newConversation() {
         screenState = screenState.copy(
-            currentConversationId = null
+            currentConversationId = Uuid.random()
         )
     }
 
