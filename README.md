@@ -7,7 +7,11 @@
 - Jaime Marques - 52683 
 - Tiago Neto - 52777
 
-## MileStone 3
+## Milestone 2
+https://iselpt-my.sharepoint.com/:v:/g/personal/a52683_alunos_isel_pt/IQA_XSRU8iWRQonzZmcN3TOeAUMbH4aQ2oyS8FRa24uLaoQ?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=qBhbRE
+
+
+## Milestone 3
 https://iselpt-my.sharepoint.com/:v:/g/personal/a52683_alunos_isel_pt/IQCMd4gBVbeiT4JDl0kk7y3KAccmuLoMQ1EG77Np8_-hGq8?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=dWXucl
 
 ## Testes da API Gemini
