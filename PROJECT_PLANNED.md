@@ -375,6 +375,27 @@ As configurações serão armazenadas utilizando DataStore.
 
 # 11. Arquitetura
 
+## Atualização do planeamento: MVVM
+
+O planeamento passa a adotar **Model–View–ViewModel (MVVM)**. A descrição MVC abaixo e as restantes referências a controllers neste documento são preservadas como registo da proposta inicial; devem ser interpretadas à luz desta atualização. Esta decisão altera o planeamento e não significa que a migração do código já esteja concluída.
+
+O Jetpack Compose é uma framework declarativa orientada a estado que se integra naturalmente com ViewModels e com um fluxo unidirecional de dados: a interface apresenta o estado exposto pelo ViewModel e envia-lhe as ações do utilizador. Esta abordagem está alinhada com as recomendações de arquitetura Android e facilita a gestão do estado e do ciclo de vida dos ecrãs. O Compose não obriga, contudo, à utilização de MVVM; esta é a escolha adotada para o projeto.
+
+- **Model:** representa os dados e inclui os componentes de acesso aos dados, como repositórios, Room e API.
+- **ViewModel:** recebe as ações da View, coordena as operações com os repositórios e expõe o estado observável da interface.
+- **View:** os composables apresentam o estado e encaminham as ações do utilizador, sem aceder diretamente à Room ou à API.
+
+```text
+View (Compose) ── ações ──> ViewModel ──> Repositórios ──> Room / API
+View (Compose) <── estado ── ViewModel
+```
+
+A migração deverá transferir gradualmente o estado de apresentação e as ações dos controllers para ViewModels, mantendo os modelos, repositórios e persistência existentes sempre que adequado. A configuração das dependências continua a ser manual, através da `Application`, sem Dagger ou Hilt.
+
+Referências: [Arquitetura da interface em Compose](https://developer.android.com/develop/ui/compose/architecture) e [recomendações de arquitetura Android](https://developer.android.com/topic/architecture/recommendations).
+
+## Proposta inicial: MVC
+
 A aplicação utilizará inicialmente o padrão arquitetural **MVC (Model-View-Controller)**.
 
 A arquitetura terá como objetivo separar as responsabilidades da aplicação e evitar que uma única classe seja responsável pela interface, acesso à base de dados, comunicação com a API e lógica de negócio.
@@ -885,6 +906,12 @@ A aplicação deverá fornecer feedback adequado quando:
 # Adendas do Projeto
 
 Nesta Secção são colocada adendas e ideas que tivemos conforme avançamos com o projeto
+
+## Alteração de MVC para MVVM
+
+O plano inicial previa MVC. A arquitetura escolhida passa a ser **Model–View–ViewModel**, conforme a atualização da secção 11. A mudança foi decidida porque o Jetpack Compose foi concebido em torno de uma interface declarativa e de estado observável, integrando-se com ViewModels e fluxo unidirecional de dados. Isso adequa-se à gestão dos estados de conversa, carregamento e erro previstos para a aplicação. O Compose também suporta outras abordagens arquiteturais, pelo que MVVM é uma decisão do projeto, não uma imposição da framework.
+
+As referências anteriores a MVC e controllers mantêm-se para preservar o histórico do planeamento. A migração da implementação existente deverá ser realizada e validada numa etapa própria.
 
 - Botão de Partilha, para uma outra ia ou até mesmo para uma pessoa
 

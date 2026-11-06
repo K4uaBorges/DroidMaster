@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
+    <exclude domain="file" path="datastore/gemini_settings.preferences_pb" />
     <exclude domain="database" path="droidmaster.db" />
     <exclude domain="database" path="droidmaster.db-wal" />
     <exclude domain="database" path="droidmaster.db-shm" />

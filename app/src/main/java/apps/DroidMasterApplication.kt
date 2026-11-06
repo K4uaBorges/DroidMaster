@@ -2,6 +2,7 @@ package apps
 
 import android.app.Application
 import api.GeminiAPI
+import api.GeminiChatAssistant
 import api.createGeminiClient
 import controller.ChatController
 import controller.ConversationController
@@ -10,6 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import storage.AppDatabase
+import storage.GeminiKeyStore
 import storage.repository.RoomConversationRepository
 
 class DroidMasterApplication : Application() {
@@ -21,6 +23,7 @@ class DroidMasterApplication : Application() {
     val sharedController by lazy { SharedController(conversationRepository) }
 
     val geminiClient by lazy { createGeminiClient() }
+    val geminiKeyStore by lazy { GeminiKeyStore(this) }
 
     fun createGeminiAPI(apiKey: String): GeminiAPI = GeminiAPI(geminiClient, apiKey)
 
@@ -32,7 +35,8 @@ class DroidMasterApplication : Application() {
         ChatController(
             conversationController,
             conversationRepository,
-            applicationScope
+            applicationScope,
+            GeminiChatAssistant(this, geminiKeyStore, ::createGeminiAPI)
         )
     }
 }

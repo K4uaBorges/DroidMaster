@@ -4,6 +4,7 @@ import api.dto.GeminiContent
 import api.dto.GeminiPart
 import api.dto.GeminiRequest
 import api.dto.GeminiResponse
+import api.interfaces.AIProvider
 import errors.GeminiEmptyResponseException
 import errors.GeminiHttpException
 import io.ktor.client.HttpClient
@@ -15,7 +16,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 
-private const val DEFAULT_MODEL = "gemini-3.8-flash"
+private const val DEFAULT_MODEL = "gemini-3.5-flash-lite" //"gemini-3.8-flash"
 
 
 /** REST API configured with a key. The caller supplies each conversation's context. */
@@ -60,7 +61,9 @@ class GeminiAPI(
                         parts = listOf(
                             GeminiPart(
                                 text = "És o DroidMaster, um mentor engenheiro senior, especializado em desenvolvimento Android. " +
-                                        "Ajuda o utilizador com explicações claras e exemplos em Kotlin."
+                                        "Ajuda o utilizador com explicações claras e exemplos em Kotlin." +
+                                        "Não precisas de fazer uma apresentação sempre," +
+                                        " que dás uma resposta ser mais livre, sem preocupações e descontraido "
                             )
                         )
                     )

@@ -16,6 +16,8 @@ import controller.SharedController
 import view.chat.ActiveChatScreenMain
 import view.history.ChatHistoryScreenMain
 import view.title.TitleScreenMain
+import view.settings.SettingsScreen
+import storage.GeminiKeyStore
 
 class MainActivity : ComponentActivity() {
 
@@ -29,7 +31,8 @@ class MainActivity : ComponentActivity() {
             DroidMasterApp(
                 chatController = droidMasterApplication.chatController,
                 conversationController = droidMasterApplication.conversationController,
-                sharedController = droidMasterApplication.sharedController
+                sharedController = droidMasterApplication.sharedController,
+                keyStore = droidMasterApplication.geminiKeyStore
             )
         }
     }
@@ -47,7 +50,8 @@ enum class Screen{
 fun DroidMasterApp(
     chatController: ChatController,
     conversationController: ConversationController,
-    sharedController: SharedController
+    sharedController: SharedController,
+    keyStore: GeminiKeyStore
 ) {
 
     var currentScreen by remember {
@@ -68,7 +72,8 @@ fun DroidMasterApp(
                 },
                 onStartChatClick = {
                     currentScreen = Screen.ACTIVE_CHAT
-                }
+                },
+                onSettingsClick = { previousScreen = Screen.TITLE; currentScreen = Screen.SETTINGS }
             )
         }
 
@@ -80,7 +85,8 @@ fun DroidMasterApp(
                 onHistoryClick = {
                     currentScreen = Screen.HISTORY
                     previousScreen = Screen.ACTIVE_CHAT
-                }
+                },
+                onSettingsClick = { previousScreen = Screen.ACTIVE_CHAT; currentScreen = Screen.SETTINGS }
             )
         }
 
@@ -104,6 +110,7 @@ fun DroidMasterApp(
             )
         }
 
+        Screen.SETTINGS -> SettingsScreen(keyStore) { currentScreen = previousScreen }
         else -> currentScreen = Screen.TITLE
     }
 }

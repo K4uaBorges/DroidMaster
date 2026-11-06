@@ -1,4 +1,4 @@
-package api
+package api.interfaces
 
 import api.dto.GeminiContent
 

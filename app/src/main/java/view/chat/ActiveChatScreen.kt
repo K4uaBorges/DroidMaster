@@ -45,6 +45,7 @@ fun ActiveChatScreenMain(
     conversationId: Uuid?,
     sharedController: SharedController,
     onHistoryClick: () -> Unit,         // "ActiveChatScreen, quando alguém quiser abrir o histórico, executa esta função."
+    onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
 
@@ -87,6 +88,11 @@ fun ActiveChatScreenMain(
                 )
             }
             state.error?.let { Text(text = it, modifier = Modifier.padding(12.dp)) }
+            if (state.error != null && !state.isSending && state.messages.lastOrNull()?.role == model.Author.USER) {
+                androidx.compose.material3.TextButton(onClick = { controller.retryResponse() }) { Text("Tentar novamente") }
+            }
+            if (state.error != null) androidx.compose.material3.TextButton(onClick = onSettingsClick) { Text("Definições") }
+            if (state.isSending) Text("A aguardar resposta...", modifier = Modifier.padding(12.dp))
         }
     }
 }

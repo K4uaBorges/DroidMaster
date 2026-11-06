@@ -1,6 +1,8 @@
 package controller
 
 import kotlinx.coroutines.CompletableDeferred
+import api.interfaces.ChatAssistant
+import errors.GeminiHttpException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runCurrent
@@ -15,6 +17,78 @@ import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ConversationControllersTest {
+    @Test
+    fun assistantReceivesConversationHistoryAndResponseIsPersisted() = runTest {
+        val repository = FakeConversationRepository()
+        val conversations = ConversationController(repository, backgroundScope)
+        val requests = mutableListOf<List<Message>>()
+        val chat = ChatController(conversations, repository, backgroundScope, ChatAssistant { messages ->
+            requests.add(messages)
+            "resposta"
+        })
+        runCurrent()
+        chat.changeMessageText("primeira")
+        chat.sendMessage()!!.join()
+        chat.changeMessageText("segunda")
+        chat.sendMessage()!!.join()
+        runCurrent()
+        assertEquals(listOf("primeira", "resposta", "segunda"), requests.last().map { it.text })
+        assertEquals(listOf(Author.USER, Author.MODEL, Author.USER, Author.MODEL), chat.screenState.messages.map { it.role })
+    }
+
+    @Test
+    fun apiErrorKeepsUserMessageAndReportsStatus() = runTest {
+        val repository = FakeConversationRepository()
+        val conversations = ConversationController(repository, backgroundScope)
+        val chat = ChatController(conversations, repository, backgroundScope, ChatAssistant { throw GeminiHttpException(429) })
+        runCurrent()
+        chat.changeMessageText("pergunta")
+        chat.sendMessage()!!.join()
+        runCurrent()
+        assertEquals("pergunta", chat.screenState.messages.single().text)
+        assertTrue(chat.screenState.error!!.contains("429"))
+        assertFalse(chat.screenState.isSending)
+    }
+
+    @Test
+    fun retryUsesSavedMessageWithoutDuplicatingIt() = runTest {
+        val repository = FakeConversationRepository()
+        val conversations = ConversationController(repository, backgroundScope)
+        var attempts = 0
+        val chat = ChatController(conversations, repository, backgroundScope, ChatAssistant {
+            if (attempts++ == 0) throw GeminiHttpException(429)
+            "resposta"
+        })
+        runCurrent()
+        chat.changeMessageText("pergunta")
+        chat.sendMessage()!!.join()
+        runCurrent()
+        chat.retryResponse()!!.join()
+        runCurrent()
+        assertEquals(listOf("pergunta", "resposta"), chat.screenState.messages.map { it.text })
+        assertNull(chat.screenState.error)
+    }
+
+    @Test
+    fun responseAfterNavigationIsSavedInOriginalConversation() = runTest {
+        val repository = FakeConversationRepository()
+        val conversations = ConversationController(repository, backgroundScope)
+        val answer = CompletableDeferred<String>()
+        val chat = ChatController(conversations, repository, backgroundScope, ChatAssistant { answer.await() })
+        runCurrent()
+        chat.changeMessageText("pergunta")
+        val sending = chat.sendMessage()!!
+        runCurrent()
+        val originalId = conversations.screenState.currentConversationId!!
+        chat.newConversation()
+        answer.complete("resposta")
+        sending.join()
+        runCurrent()
+        assertNull(conversations.screenState.currentConversationId)
+        assertTrue(chat.screenState.messages.isEmpty())
+        assertEquals(listOf("pergunta", "resposta"), repository.getMessagesPage(originalId, 10, 0).map { it.text })
+    }
+
     @Test
     fun firstSendCreatesConversationAndEmptyDraftDoesNot() = runTest {
         val repository = FakeConversationRepository()
