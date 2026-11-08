@@ -24,7 +24,8 @@ data class ChatViewState(
     val messageText: String = "",
     val messages: List<Message> = emptyList(),
     val isSending: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val isTemporary: Boolean = false
 )
 
 class ChatController(
@@ -35,25 +36,168 @@ class ChatController(
 ) {
     var screenState by mutableStateOf(ChatViewState())
         private set
+    private var temporaryConversationId: Uuid? = null
+    private var temporaryJob: Job? = null
+    private var temporarySession = 0L
 
     init {
         scope.launch {
             conversationController.currentConversationId.collectLatest { conversationId ->
+                if (screenState.isTemporary) return@collectLatest
+
                 screenState = screenState.copy(messages = emptyList())
+
                 if (conversationId != null) {
                     repository.observeMessages(conversationId)
-                        .catch { screenState = screenState.copy(error = "Não foi possível carregar as mensagens.") }
-                        .collect { messages -> screenState = screenState.copy(messages = messages) }
+                        .catch {
+                            if (!screenState.isTemporary) {
+                                screenState = screenState.copy(
+                                    error = "Não foi possível carregar as mensagens."
+                                )
+                            }
+                        }
+                        .collect { messages ->
+                            if (!screenState.isTemporary) {
+                                screenState = screenState.copy(messages = messages)
+                            }
+                        }
                 }
             }
         }
     }
 
+    fun startTemporaryConversation(): Boolean {
+        // Espera que termine qualquer envio atual.
+        if (screenState.isSending) return false
+
+        temporarySession++
+        temporaryJob?.cancel()
+        temporaryJob = null
+        temporaryConversationId = Uuid.random()
+
+        // Ativa o modo temporário antes de limpar a seleção.
+        screenState = ChatViewState(isTemporary = true)
+        conversationController.newConversation()
+
+        return true
+    }
+
+    fun endTemporaryConversation() {
+        if (!screenState.isTemporary) return
+
+        // Invalida respostas pendentes desta sessão.
+        temporarySession++
+        temporaryJob?.cancel()
+        temporaryJob = null
+        temporaryConversationId = null
+
+        conversationController.newConversation()
+        screenState = ChatViewState()
+    }
     fun changeMessageText(nextText: String) {
         screenState = screenState.copy(messageText = nextText)
     }
 
+    private fun sendTemporaryMessage(): Job? {
+        val text = screenState.messageText.trim()
+        val conversationId = temporaryConversationId ?: return null
+
+        if (text.isEmpty() || screenState.isSending) return null
+
+        val message = Message(
+            order = (screenState.messages.lastOrNull()?.order ?: 0L) + 1L,
+            conversationId = conversationId,
+            role = Author.USER,
+            text = text
+        )
+
+        screenState = screenState.copy(
+            messageText = "",
+            messages = screenState.messages + message,
+            error = null
+        )
+
+        return requestTemporaryResponse()
+    }
+
+    private fun requestTemporaryResponse(): Job? {
+        if (!screenState.isTemporary || screenState.isSending) return null
+        if (screenState.messages.lastOrNull()?.role != Author.USER) return null
+
+        val provider = assistant
+        if (provider == null) {
+            screenState = screenState.copy(
+                error = "O assistente não está disponível."
+            )
+            return null
+        }
+
+        val conversationId = temporaryConversationId ?: return null
+        val session = temporarySession
+        val history = screenState.messages.toList()
+
+        screenState = screenState.copy(
+            isSending = true,
+            error = null
+        )
+
+        val job = scope.launch {
+            try {
+                val answer = provider.generate(history)
+
+                // Ignora a resposta se esta conversa já tiver terminado.
+                if (
+                    screenState.isTemporary &&
+                    temporarySession == session
+                ) {
+                    val response = Message(
+                        order = (history.lastOrNull()?.order ?: 0L) + 1L,
+                        conversationId = conversationId,
+                        role = Author.MODEL,
+                        text = answer
+                    )
+
+                    screenState = screenState.copy(
+                        messages = history + response
+                    )
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                if (
+                    screenState.isTemporary &&
+                    temporarySession == session
+                ) {
+                    val description = when (error) {
+                        is OfflineException ->
+                            "Sem ligação à Internet. " +
+                                    "A conversa temporária não foi guardada."
+
+                        else -> errorMessage(error)
+                    }
+
+                    screenState = screenState.copy(error = description)
+                }
+            } finally {
+                if (
+                    screenState.isTemporary &&
+                    temporarySession == session
+                ) {
+                    screenState = screenState.copy(isSending = false)
+                }
+            }
+        }
+
+        temporaryJob = job
+        return job
+    }
+
     fun sendMessage(): Job? {
+        if (screenState.isTemporary) {
+            return sendTemporaryMessage()
+        }
+
+        // Mantém todo o código que já tinhas a partir daqui.
         val text = screenState.messageText.trim()
         if (text.isEmpty() || screenState.isSending) return null
         val conversationId = conversationController.currentConversationId.value
@@ -106,6 +250,11 @@ class ChatController(
     }
 
     fun retryResponse(): Job? {
+        if (screenState.isTemporary) {
+            return requestTemporaryResponse()
+        }
+
+        // Mantém todo o código que já tinhas a partir daqui.
         val conversationId = conversationController.currentConversationId.value ?: return null
         val provider = assistant ?: return null
         if (screenState.isSending || screenState.messages.lastOrNull()?.role != Author.USER) return null

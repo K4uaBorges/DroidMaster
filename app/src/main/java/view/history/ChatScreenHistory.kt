@@ -27,6 +27,7 @@ fun ChatHistoryScreenMain(
     onConversationClick: (Uuid) -> Unit,
     onNewConversationClick: () -> Unit,
     onBackClick: () -> Unit,
+    onAboutClick: () -> Unit,
     modifier: Modifier = Modifier,
     errorMessage: String? = null
 ) {
@@ -77,6 +78,9 @@ fun ChatHistoryScreenMain(
                         )
                     }
                 }
+            }
+            Button(onClick = onAboutClick) {
+                Text("About me")
             }
 
             Button(

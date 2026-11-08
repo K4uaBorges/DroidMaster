@@ -37,6 +37,7 @@ fun TitleScreenMain(
     onHistoryClick: () -> Unit,
     onStartChatClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    onTemporaryChatClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val state = controller.screenState
@@ -129,6 +130,13 @@ fun TitleScreenMain(
                         }
                     }
                 )
+                TextButton(
+                    onClick = onTemporaryChatClick,
+                    enabled = !state.isSending,
+                    modifier = Modifier.padding(top = 12.dp)
+                ) {
+                    Text("OneView · Conversa temporária")
+                }
 
             }
 

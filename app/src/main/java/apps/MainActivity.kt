@@ -18,6 +18,7 @@ import view.history.ChatHistoryScreenMain
 import view.title.TitleScreenMain
 import view.settings.SettingsScreen
 import storage.GeminiKeyStore
+import view.about.AboutMeScreen
 
 class MainActivity : ComponentActivity() {
 
@@ -73,7 +74,15 @@ fun DroidMasterApp(
                 onStartChatClick = {
                     currentScreen = Screen.ACTIVE_CHAT
                 },
-                onSettingsClick = { previousScreen = Screen.TITLE; currentScreen = Screen.SETTINGS }
+                onSettingsClick = {
+                    previousScreen = Screen.TITLE
+                    currentScreen = Screen.SETTINGS
+                },
+                onTemporaryChatClick = {
+                    if (chatController.startTemporaryConversation()) {
+                        currentScreen = Screen.ACTIVE_CHAT
+                    }
+                }
             )
         }
 
@@ -106,11 +115,19 @@ fun DroidMasterApp(
                 onBackClick = {
                     currentScreen = previousScreen
                 },
+                onAboutClick = {
+                    currentScreen = Screen.ABOUT
+                },
                 errorMessage = conversationController.screenState.error
             )
         }
 
         Screen.SETTINGS -> SettingsScreen(keyStore) { currentScreen = previousScreen }
+        Screen.ABOUT -> AboutMeScreen(
+            onBackClick = {
+                currentScreen = Screen.HISTORY
+            }
+        )
         else -> currentScreen = Screen.TITLE
     }
 }
