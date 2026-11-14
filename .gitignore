@@ -2,4 +2,4 @@
 build/
 README.md
 DroidMaster.env
-local.properties
+/local.properties
