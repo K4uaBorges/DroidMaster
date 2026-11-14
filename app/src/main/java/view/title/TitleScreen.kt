@@ -10,36 +10,39 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import controller.ChatController
+import view.chat.ChatInput
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.WatchLater
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.ui.graphics.Color
+
 
 @Composable
 fun TitleScreenMain(
     controller: ChatController,
-    onHistoryClick: () -> Unit,
+    onMenuClick: () -> Unit,
     onStartChatClick: () -> Unit,
-    onSettingsClick: () -> Unit,
+//    onSettingsClick: () -> Unit,
     onTemporaryChatClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+
     val state = controller.screenState
 
     Scaffold(
@@ -51,20 +54,53 @@ fun TitleScreenMain(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            IconButton(
-                onClick = onHistoryClick,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(16.dp)
+            Surface(
+                onClick = onMenuClick,
+                shape = CircleShape,
+                color = Color(0xFFFFE6DC),
+                shadowElevation = 8.dp
             ) {
-                Text(
-                    text = "☰",
-                    fontSize = 26.sp
-                )
+                Box(
+                    modifier = Modifier.size(56.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        modifier = modifier.size(28.dp),
+                        contentDescription = "Abrir Menu"
+                    )
+                }
             }
 
-            TextButton(onClick = onSettingsClick, modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)) {
-                Text("Definições")
+            Surface(
+                onClick = onTemporaryChatClick,
+                enabled = !state.isSending,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp),
+                shape = CircleShape,
+                color = Color(0xFFFFE6DC),
+                shadowElevation = 8.dp
+            ) {
+                Box(
+                    modifier = Modifier.size(56.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (controller.isTemporaryChat) {
+                            Icons.Default.WatchLater
+                        } else {
+                            Icons.Default.Schedule
+                        },
+                        contentDescription = if (controller.isTemporaryChat){
+                            "Conversa temporária ativada"
+                        } else {
+                            "Ativar conversa temporária"
+                        },
+                        modifier = Modifier.size(28.dp),
+                        tint = Color.Black
+                    )
+                }
             }
 
             Column(
@@ -96,39 +132,20 @@ fun TitleScreenMain(
                     )
                 )
 
-                OutlinedTextField(
+                ChatInput(
                     value = state.messageText,
                     onValueChange = {
                         controller.changeMessageText(it)
                     },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = {
-                        Text("Pergunte ao DroidMaster...")
+                    onSend = {
+                        if ( state.messageText.isNotBlank() && !state.isSending) {
+                            controller.sendMessage()
+                            onStartChatClick()
+                        }
                     },
-                    singleLine = true,
-                    shape = RoundedCornerShape(28.dp),
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Send
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onSend = {
-                            if (state.messageText.isNotBlank() && !state.isSending) {
-                                controller.sendMessage()
-                                onStartChatClick()
-                            }
-                        }
-                    ),
-                    trailingIcon = {
-                        Button(
-                            onClick = {
-                                controller.sendMessage()
-                                onStartChatClick()
-                            },
-                            enabled = state.messageText.isNotBlank() && !state.isSending
-                        ) {
-                            Text(">")
-                        }
-                    }
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = "Pergunte ao DroidMaster...",
+                    enabled = !state.isSending
                 )
                 TextButton(
                     onClick = onTemporaryChatClick,

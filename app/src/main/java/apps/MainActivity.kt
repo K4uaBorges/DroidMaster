@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,21 +66,19 @@ fun DroidMasterApp(
         Screen.TITLE -> {
             TitleScreenMain(
                 controller = chatController,
-                onHistoryClick = {
+                onMenuClick = {
                     currentScreen = Screen.HISTORY
                     previousScreen = Screen.TITLE
                 },
                 onStartChatClick = {
                     currentScreen = Screen.ACTIVE_CHAT
                 },
-                onSettingsClick = {
-                    previousScreen = Screen.TITLE
-                    currentScreen = Screen.SETTINGS
-                },
+//                onSettingsClick = {
+//                    previousScreen = Screen.TITLE
+//                    currentScreen = Screen.SETTINGS
+//                },
                 onTemporaryChatClick = {
-                    if (chatController.startTemporaryConversation()) {
-                        currentScreen = Screen.ACTIVE_CHAT
-                    }
+                    chatController.toggleTemporaryMode()
                 }
             )
         }

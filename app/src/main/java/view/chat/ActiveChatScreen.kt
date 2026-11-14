@@ -11,12 +11,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -38,6 +40,24 @@ import kotlin.uuid.Uuid
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AvTimer
+import androidx.compose.material.icons.filled.ChatBubbleOutline
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.WatchLater
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import model.Author
+
+private val TopFloatActionsBubbleColor = Color(0xFFFFE6DC)
 
 @Composable
 fun ActiveChatScreenMain(
@@ -61,16 +81,22 @@ fun ActiveChatScreenMain(
                 .fillMaxSize()
         ) {
 
-            ChatHeader(
-                onMenuClick = onHistoryClick,
-                conversationId = conversationId,
-                sharedController = sharedController
-            )
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                ChatMessages(
+                    conversation = state.messages,
+                    modifier = Modifier.fillMaxSize()
+                )
 
-            ChatMessages(
-                conversation = state.messages,
-                modifier = Modifier.weight(1f)
-            )
+                TopFloatingActions(
+                    onMenuClick = onHistoryClick,
+                    conversationId = conversationId,
+                    sharedController = sharedController
+                )
+            }
 
             Box(
                 modifier = Modifier
@@ -84,7 +110,8 @@ fun ActiveChatScreenMain(
                     },
                     onSend = {
                         controller.sendMessage()
-                    }
+                    },
+                    enabled = !state.isSending
                 )
             }
             state.error?.let { Text(text = it, modifier = Modifier.padding(12.dp)) }
@@ -98,48 +125,61 @@ fun ActiveChatScreenMain(
 }
 
 @Composable
-fun ChatHeader(
+fun TopFloatingActions(
     onMenuClick: () -> Unit,
     conversationId: Uuid?,
-    sharedController: SharedController
+    sharedController: SharedController,
+    modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = Modifier
+    Row(
+        modifier = modifier
             .fillMaxWidth()
             .padding(
                 horizontal = 16.dp,
-                vertical = 8.dp
-            )
+                vertical = 12.dp
+            ),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
     ) {
 
-        IconButton(
+        // Botão menu em círculo.
+        Surface(
             onClick = onMenuClick,
-            modifier = Modifier
-                .align(Alignment.CenterStart)
+            shape = CircleShape,
+            color = TopFloatActionsBubbleColor,
+            shadowElevation = 8.dp
         ) {
-            Text(
-                text = "☰",
-                fontSize = 26.sp
-            )
+            Box(
+                modifier = Modifier.size(56.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    modifier = modifier.size(28.dp),
+                    contentDescription = "Abrir Menu"
+                )
+            }
         }
 
-        Image(
-            painter = painterResource(
-                id = R.drawable.droidmaster_logo
-            ),
-            contentDescription = "DroidMaster",
-            modifier = Modifier
-                .align(Alignment.Center)
-                .height(60.dp),
-            contentScale = ContentScale.Fit
-        )
-        if (conversationId != null) {
-            SharedButton(
-                conversationId = conversationId,
-                destination = Shared.People(),
-                controller = sharedController,
-                modifier = Modifier.align(Alignment.CenterEnd)
-            )
+        // Botão partilha em círculo.
+        Surface(
+            shape = CircleShape,
+            color = TopFloatActionsBubbleColor,
+            shadowElevation = 8.dp
+        ) {
+            Box(
+                modifier = Modifier.size(56.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (conversationId != null) {
+                    SharedButton(
+                        conversationId = conversationId,
+                        destination = Shared.People(),
+                        controller = sharedController,
+                        modifier = modifier.size(26.dp),
+                    )
+                }
+            }
         }
     }
 }
@@ -159,21 +199,47 @@ fun ChatMessages(
         }
     }
 
+    val showDayBubble = remember(conversation) {
+        val seenDays = mutableSetOf<String>()
+            // Guarda os dias que já encontramos.
+
+        val formatter = SimpleDateFormat(
+            "yyyy-MM-dd",
+            Locale.getDefault()
+        )
+
+        conversation.map { message ->
+            if (message.role == Author.USER) {
+                // Garante que apenas consideramos as mensagens do USER.
+
+                val day = formatter.format(Date(message.timestamp))
+                seenDays.add(day)
+                    // Devolve true se for a primeira vez que encontramos esse dia.
+
+            } else {
+                false
+            }
+        }
+    }
+
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
         state = listState,
         contentPadding = PaddingValues(
-            horizontal = 12.dp,
-            vertical = 8.dp
+            start = 12.dp,
+            end = 12.dp,
+            top = 84.dp,
+            bottom = 12.dp
         ),
         verticalArrangement = Arrangement.spacedBy(
             space = 8.dp,
             alignment = Alignment.Bottom
         )
     ) {
-        items(conversation) { message ->
+        itemsIndexed(conversation) { index, message ->
             MessageView(
-                message = message
+                message = message,
+                showFullDate = showDayBubble[index]
             )
         }
     }
@@ -197,8 +263,4 @@ fun ChatMessages(
 //            Spacer(modifier = Modifier.height(8.dp))
 //        }
 //    }
-}
-
-private fun currentHourMinute(): String {
-    return SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
 }

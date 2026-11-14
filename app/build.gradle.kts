@@ -51,6 +51,9 @@ android {
     }
 }
 dependencies {
+    implementation("com.swmansion.enriched.markdown:compose:0.3.0")
+    implementation("com.swmansion.enriched.markdown:math:0.3.0")
+
     implementation(libs.androidx.datastore.preferences)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)

@@ -79,6 +79,7 @@ fun SharedButton(
 
         Icon(
             imageVector = Icons.Default.Share,
+            modifier = modifier,
             contentDescription = "Partilhar conversa"
         )
     }

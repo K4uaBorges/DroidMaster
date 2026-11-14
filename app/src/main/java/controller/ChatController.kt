@@ -24,8 +24,7 @@ data class ChatViewState(
     val messageText: String = "",
     val messages: List<Message> = emptyList(),
     val isSending: Boolean = false,
-    val error: String? = null,
-    val isTemporary: Boolean = false
+    val error: String? = null
 )
 
 class ChatController(
@@ -36,170 +35,36 @@ class ChatController(
 ) {
     var screenState by mutableStateOf(ChatViewState())
         private set
-    private var temporaryConversationId: Uuid? = null
+
+    var isTemporaryChat by mutableStateOf(false)
+        private set
+
+    private var temporaryConversationId = Uuid.random()     // Estas propriedades servem para identificar se estamos numa conversa temporária,
+    private var temporaryVersion = 0L                       //  atribuir-lhe um identificador apenas em memória e controlar os pedidos em curso.
     private var temporaryJob: Job? = null
-    private var temporarySession = 0L
 
     init {
         scope.launch {
             conversationController.currentConversationId.collectLatest { conversationId ->
-                if (screenState.isTemporary) return@collectLatest
-
+                if (isTemporaryChat) return@collectLatest                   // impede que o observador das conversas guardadas substitua as mensagens temporárias enquanto estivermos nesse modo.
                 screenState = screenState.copy(messages = emptyList())
-
                 if (conversationId != null) {
                     repository.observeMessages(conversationId)
-                        .catch {
-                            if (!screenState.isTemporary) {
-                                screenState = screenState.copy(
-                                    error = "Não foi possível carregar as mensagens."
-                                )
-                            }
-                        }
-                        .collect { messages ->
-                            if (!screenState.isTemporary) {
-                                screenState = screenState.copy(messages = messages)
-                            }
-                        }
+                        .catch { screenState = screenState.copy(error = "Não foi possível carregar as mensagens.") }
+                        .collect { messages -> screenState = screenState.copy(messages = messages) }
                 }
             }
         }
     }
 
-    fun startTemporaryConversation(): Boolean {
-        // Espera que termine qualquer envio atual.
-        if (screenState.isSending) return false
-
-        temporarySession++
-        temporaryJob?.cancel()
-        temporaryJob = null
-        temporaryConversationId = Uuid.random()
-
-        // Ativa o modo temporário antes de limpar a seleção.
-        screenState = ChatViewState(isTemporary = true)
-        conversationController.newConversation()
-
-        return true
-    }
-
-    fun endTemporaryConversation() {
-        if (!screenState.isTemporary) return
-
-        // Invalida respostas pendentes desta sessão.
-        temporarySession++
-        temporaryJob?.cancel()
-        temporaryJob = null
-        temporaryConversationId = null
-
-        conversationController.newConversation()
-        screenState = ChatViewState()
-    }
     fun changeMessageText(nextText: String) {
         screenState = screenState.copy(messageText = nextText)
     }
 
-    private fun sendTemporaryMessage(): Job? {
-        val text = screenState.messageText.trim()
-        val conversationId = temporaryConversationId ?: return null
-
-        if (text.isEmpty() || screenState.isSending) return null
-
-        val message = Message(
-            order = (screenState.messages.lastOrNull()?.order ?: 0L) + 1L,
-            conversationId = conversationId,
-            role = Author.USER,
-            text = text
-        )
-
-        screenState = screenState.copy(
-            messageText = "",
-            messages = screenState.messages + message,
-            error = null
-        )
-
-        return requestTemporaryResponse()
-    }
-
-    private fun requestTemporaryResponse(): Job? {
-        if (!screenState.isTemporary || screenState.isSending) return null
-        if (screenState.messages.lastOrNull()?.role != Author.USER) return null
-
-        val provider = assistant
-        if (provider == null) {
-            screenState = screenState.copy(
-                error = "O assistente não está disponível."
-            )
-            return null
-        }
-
-        val conversationId = temporaryConversationId ?: return null
-        val session = temporarySession
-        val history = screenState.messages.toList()
-
-        screenState = screenState.copy(
-            isSending = true,
-            error = null
-        )
-
-        val job = scope.launch {
-            try {
-                val answer = provider.generate(history)
-
-                // Ignora a resposta se esta conversa já tiver terminado.
-                if (
-                    screenState.isTemporary &&
-                    temporarySession == session
-                ) {
-                    val response = Message(
-                        order = (history.lastOrNull()?.order ?: 0L) + 1L,
-                        conversationId = conversationId,
-                        role = Author.MODEL,
-                        text = answer
-                    )
-
-                    screenState = screenState.copy(
-                        messages = history + response
-                    )
-                }
-            } catch (error: CancellationException) {
-                throw error
-            } catch (error: Exception) {
-                if (
-                    screenState.isTemporary &&
-                    temporarySession == session
-                ) {
-                    val description = when (error) {
-                        is OfflineException ->
-                            "Sem ligação à Internet. " +
-                                    "A conversa temporária não foi guardada."
-
-                        else -> errorMessage(error)
-                    }
-
-                    screenState = screenState.copy(error = description)
-                }
-            } finally {
-                if (
-                    screenState.isTemporary &&
-                    temporarySession == session
-                ) {
-                    screenState = screenState.copy(isSending = false)
-                }
-            }
-        }
-
-        temporaryJob = job
-        return job
-    }
-
     fun sendMessage(): Job? {
-        if (screenState.isTemporary) {
-            return sendTemporaryMessage()
-        }
-
-        // Mantém todo o código que já tinhas a partir daqui.
         val text = screenState.messageText.trim()
         if (text.isEmpty() || screenState.isSending) return null
+        if (isTemporaryChat) return sendTemporaryMessage(text)
         val conversationId = conversationController.currentConversationId.value
         val selectionVersion = conversationController.selectionVersion
         screenState = screenState.copy(messageText = "", isSending = true, error = null)
@@ -250,11 +115,6 @@ class ChatController(
     }
 
     fun retryResponse(): Job? {
-        if (screenState.isTemporary) {
-            return requestTemporaryResponse()
-        }
-
-        // Mantém todo o código que já tinhas a partir daqui.
         val conversationId = conversationController.currentConversationId.value ?: return null
         val provider = assistant ?: return null
         if (screenState.isSending || screenState.messages.lastOrNull()?.role != Author.USER) return null
@@ -289,5 +149,109 @@ class ChatController(
     fun newConversation() {
         conversationController.newConversation()
         screenState = screenState.copy(messageText = "", messages = emptyList(), error = null)
+    }
+
+
+    fun toggleTemporaryMode() {
+        // Só permite alterar o modo antes de começar a conversa.
+
+        if (screenState.isSending || screenState.messages.isNotEmpty()) {
+            return
+        }
+
+        if (!isTemporaryChat) {
+            temporaryJob?.cancel()
+            temporaryVersion++
+
+            temporaryConversationId = Uuid.random()
+            conversationController.newConversation()
+        }
+
+        isTemporaryChat = !isTemporaryChat
+    }
+
+    fun startTemporaryChat() {
+        temporaryJob?.cancel()
+        temporaryVersion++
+
+        temporaryConversationId = Uuid.random()
+        isTemporaryChat = true
+
+        conversationController.newConversation()
+        screenState = ChatViewState()
+    }
+
+    fun exitTemporaryChat() {
+        temporaryJob?.cancel()
+        temporaryVersion++
+
+        isTemporaryChat = false
+
+        conversationController.newConversation()
+        screenState = ChatViewState()
+    }
+
+    private fun sendTemporaryMessage(text: String) : Job? {
+        val provider = assistant ?: return null
+        val version = temporaryVersion
+        val conversationId = temporaryConversationId
+
+        val userMessage = Message(
+            order = screenState.messages.size.toLong() + 1,
+            conversationId = conversationId,
+            role = Author.USER,
+            text = text
+        )
+
+        val history = screenState.messages + userMessage
+            // Cria uma lista contendo as mensagens anteriores e a nova pergunta.
+
+        screenState = screenState.copy(
+            messageText = "",
+            messages = history,
+            isSending = true,
+            error = null
+        )
+
+        val job = scope.launch {
+            try {
+                val answer = provider.generate(history)
+                    // Envia ao Gemini todas as mensagens da conversa temporária.
+
+                if (isTemporaryChat && temporaryVersion == version) {
+                    // Verifica se ainda estamos na mesma sessão temporária.
+
+                    val modelMessage = Message(
+                        order = history.size.toLong() + 1,
+                        conversationId = conversationId,
+                        role = Author.MODEL,
+                        text = answer
+                    )
+
+                    screenState = screenState.copy(
+                        messages = screenState.messages + modelMessage
+                    )
+                }
+            } catch (error: CancellationException) {
+                throw error
+
+            } catch (error: Exception) {
+                if (isTemporaryChat && temporaryVersion == version) {
+                    screenState = screenState.copy(
+                        error = errorMessage(error)
+                    )
+                }
+
+            } finally {
+                if (isTemporaryChat && temporaryVersion == version) {
+                    screenState = screenState.copy(isSending = false)
+                }
+            }
+        }
+
+        temporaryJob = job
+            // Guarda a referência à operação em curso, para podermos cancelá-la quando saímos da conversa temporária.
+
+        return job
     }
 }
