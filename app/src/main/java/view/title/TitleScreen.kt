@@ -1,18 +1,22 @@
 package view.title
 
 import DroidMaster.apps.R
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,15 +34,16 @@ import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.WatchLater
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
-import androidx.compose.ui.graphics.Color
-
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.text.style.TextAlign
+import view.theme.LocalDroidMasterTheme
 
 @Composable
 fun TitleScreenMain(
     controller: ChatController,
     onMenuClick: () -> Unit,
     onStartChatClick: () -> Unit,
-//    onSettingsClick: () -> Unit,
     onTemporaryChatClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -51,85 +56,31 @@ fun TitleScreenMain(
 
         Box(
             modifier = Modifier
-                .padding(innerPadding)
                 .fillMaxSize()
+                .padding(innerPadding)
         ) {
-            Surface(
-                onClick = onMenuClick,
-                shape = CircleShape,
-                color = Color(0xFFFFE6DC),
-                shadowElevation = 8.dp
-            ) {
-                Box(
-                    modifier = Modifier.size(56.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Menu,
-                        modifier = modifier.size(28.dp),
-                        contentDescription = "Abrir Menu"
-                    )
-                }
-            }
-
-            Surface(
-                onClick = onTemporaryChatClick,
-                enabled = !state.isSending,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(16.dp),
-                shape = CircleShape,
-                color = Color(0xFFFFE6DC),
-                shadowElevation = 8.dp
-            ) {
-                Box(
-                    modifier = Modifier.size(56.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = if (controller.isTemporaryChat) {
-                            Icons.Default.WatchLater
-                        } else {
-                            Icons.Default.Schedule
-                        },
-                        contentDescription = if (controller.isTemporaryChat){
-                            "Conversa temporária ativada"
-                        } else {
-                            "Ativar conversa temporária"
-                        },
-                        modifier = Modifier.size(28.dp),
-                        tint = Color.Black
-                    )
-                }
-            }
+            TopFloatingActions(
+                onMenuClick = onMenuClick,
+                onTemporaryChatClick = onTemporaryChatClick,
+                controller = controller,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
 
             Column(
                 modifier = Modifier
                     .align(Alignment.Center)
+                    .offset(y = (-50).dp)
                     .fillMaxWidth()
                     .padding(
-                        horizontal = 26.dp
+                        horizontal = 16.dp
                     ),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Image(
-                    painter = painterResource(
-                        id = R.drawable.droidmaster_logo
-                    ),
-                    contentDescription = "DroidMaster",
-                    modifier = Modifier.height(90.dp),
-                    contentScale = ContentScale.Fit
-                )
 
-                Text(
-                    text = "Como posso ajudar?", // Trocar para ser aleatório as frases.
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier =  Modifier.padding(
-                        top = 24.dp,
-                        bottom = 24.dp
-                    )
+                MiddleTextAndImage()
+
+                Spacer(
+                    modifier = Modifier.height(40.dp)
                 )
 
                 ChatInput(
@@ -138,7 +89,7 @@ fun TitleScreenMain(
                         controller.changeMessageText(it)
                     },
                     onSend = {
-                        if ( state.messageText.isNotBlank() && !state.isSending) {
+                        if (state.messageText.isNotBlank() && !state.isSending) {
                             controller.sendMessage()
                             onStartChatClick()
                         }
@@ -147,16 +98,153 @@ fun TitleScreenMain(
                     placeholder = "Pergunte ao DroidMaster...",
                     enabled = !state.isSending
                 )
-                TextButton(
-                    onClick = onTemporaryChatClick,
-                    enabled = !state.isSending,
-                    modifier = Modifier.padding(top = 12.dp)
-                ) {
-                    Text("OneView · Conversa temporária")
-                }
 
+                Spacer(
+                    modifier = Modifier.height(30.dp)
+                )
+
+                SuggestedTopicsView(
+                    onSuggestedTopicClick = { prompt ->
+                        if (!controller.screenState.isSending) {
+                            controller.changeMessageText(prompt)
+
+                            if (controller.sendMessage() != null) {
+                                onStartChatClick()
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
-
         }
+    }
+}
+
+
+@Composable
+fun TopFloatingActions(
+    onMenuClick: () -> Unit,
+    onTemporaryChatClick: () -> Unit,
+    controller: ChatController,
+    modifier: Modifier = Modifier,
+) {
+    val theme = LocalDroidMasterTheme.current
+
+    val animatedButtonColor by animateColorAsState(
+        targetValue = if (controller.isTemporaryChat)
+            theme.colors.buttonColor
+        else
+            theme.colors.disabledButtonColor,
+        animationSpec = tween(durationMillis = 300),
+        label = "SendButtonColor"
+    )
+
+    val animatedIconColor by animateColorAsState(
+        targetValue = if (controller.isTemporaryChat)
+            theme.colors.iconColor
+        else
+            theme.colors.disabledIconColor,
+        animationSpec = tween(durationMillis = 300),
+        label = "SendIconColor"
+    )
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = 16.dp,
+                vertical = 12.dp
+            ),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        // Botão menu em círculo.
+        Surface(
+            onClick = onMenuClick,
+            shape = CircleShape,
+            color = theme.colors.secondary,
+            shadowElevation = 8.dp
+        ) {
+            Box(
+                modifier = Modifier.size(56.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    modifier = Modifier.size(28.dp),
+                    contentDescription = "Abrir Menu"
+                )
+            }
+        }
+
+        // Botão chat temporário em círculo.
+        Surface(
+            onClick = onTemporaryChatClick,
+            shape = CircleShape,
+            color = animatedButtonColor,
+            shadowElevation = 8.dp
+        ) {
+            Box(
+                modifier = Modifier.size(56.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (controller.isTemporaryChat) {
+                        Icons.Default.WatchLater
+                    } else {
+                        Icons.Default.Schedule
+                    },
+                    contentDescription = if (controller.isTemporaryChat){
+                        "Conversa temporária ativada"
+                    } else {
+                        "Ativar conversa temporária"
+                    },
+                    modifier = Modifier.size(28.dp),
+                    tint = animatedIconColor
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun MiddleTextAndImage(
+    modifier: Modifier = Modifier
+) {
+
+    val greeting = remember {
+        TitleGreetings.random()
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = 26.dp
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = painterResource(
+                id = R.drawable.droidmaster_logo
+            ),
+            contentDescription = "DroidMaster",
+            modifier = Modifier.height(120.dp),
+            contentScale = ContentScale.Fit
+        )
+
+        Text(
+            text = greeting,
+            fontSize = 26.sp,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(
+                top = 24.dp,
+                bottom = 24.dp
+            ),
+
+        )
     }
 }

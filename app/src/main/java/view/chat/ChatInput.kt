@@ -24,21 +24,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.runtime.getValue
-
-private val InputBubbleColor = Color(0xFFFFE6DC)
-private val InputTextColor = Color.Black
-private val InputPlaceholderColor = Color(0xFF8F7D76)
-private val SendButtonColor = Color(0xFFFF7A59)                     // Color(0xFFA84F35)
-private val SendIconColor = Color.White
-private val DisabledSendIconColor = Color.Black
-private val DisabledSendButtonColor = Color.Transparent             // Color(0xFFFF7A59)
+import view.theme.LocalDroidMasterTheme
 
 @Composable
 fun ChatInput(
@@ -51,28 +43,30 @@ fun ChatInput(
 ) {
     val canSend = value.isNotBlank() && enabled
 
+    val theme = LocalDroidMasterTheme.current
+
     val animatedButtonColor by animateColorAsState(
         targetValue = if (canSend)
-            SendButtonColor
+            theme.colors.buttonColor
         else
-            DisabledSendButtonColor,
-        animationSpec = tween(durationMillis = 300),
+            theme.colors.disabledButtonColor,
+        animationSpec = tween(theme.animations.durationMillis),
         label = "SendButtonColor"
     )
 
     val animatedIconColor by animateColorAsState(
         targetValue = if (canSend)
-            SendIconColor
+            theme.colors.iconColor
         else
-            DisabledSendIconColor,
-        animationSpec = tween(durationMillis = 300),
+            theme.colors.disabledIconColor,
+        animationSpec = tween(theme.animations.durationMillis),
         label = "SendIconColor"
     )
 
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(50.dp),
-        color = InputBubbleColor,
+        color = theme.colors.bubbleColor,
         shadowElevation = 8.dp
     ) {
         Row(
@@ -96,7 +90,7 @@ fun ChatInput(
                 if (value.isEmpty()) {
                     Text(
                         text = placeholder,
-                        color = InputPlaceholderColor,
+                        color = theme.colors.placeholderColor,
                         fontSize = 20.sp
                     )
                 }
@@ -108,7 +102,7 @@ fun ChatInput(
                     singleLine = false,
                     maxLines = 4,
                     textStyle = TextStyle(
-                        color = InputTextColor,
+                        color = theme.colors.inputTextColor,
                         fontSize = 18.sp
                     ),
                     keyboardOptions = KeyboardOptions(
@@ -133,12 +127,21 @@ fun ChatInput(
                 modifier = Modifier
                     .size(54.dp)
                     .clip(CircleShape)
-                    .background(animatedButtonColor)
+                    .background(
+                        if(theme.animations.isEnabled)
+                            animatedButtonColor
+                        else
+                            theme.colors.buttonColor
+                    )
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowUpward,
                     contentDescription = "Enviar Mensagem",
-                    tint = animatedIconColor
+                    tint =
+                        if (theme.animations.isEnabled)
+                            animatedIconColor
+                        else
+                            theme.colors.iconColor
                 )
             }
         }

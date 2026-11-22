@@ -56,8 +56,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import model.Author
-
-private val TopFloatActionsBubbleColor = Color(0xFFFFE6DC)
+import view.theme.DroidMasterTheme
+import view.theme.LocalDroidMasterTheme
 
 @Composable
 fun ActiveChatScreenMain(
@@ -80,7 +80,6 @@ fun ActiveChatScreenMain(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -131,6 +130,9 @@ fun TopFloatingActions(
     sharedController: SharedController,
     modifier: Modifier = Modifier
 ) {
+
+    val theme = LocalDroidMasterTheme.current
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -146,7 +148,7 @@ fun TopFloatingActions(
         Surface(
             onClick = onMenuClick,
             shape = CircleShape,
-            color = TopFloatActionsBubbleColor,
+            color = theme.colors.secondary,
             shadowElevation = 8.dp
         ) {
             Box(
@@ -164,7 +166,7 @@ fun TopFloatingActions(
         // Botão partilha em círculo.
         Surface(
             shape = CircleShape,
-            color = TopFloatActionsBubbleColor,
+            color = theme.colors.secondary,
             shadowElevation = 8.dp
         ) {
             Box(
