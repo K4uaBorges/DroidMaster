@@ -95,7 +95,7 @@ fun TitleScreenMain(
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = "Pergunte ao DroidMaster...",
+                    placeholder = "Perguntar ao DroidMaster...",
                     enabled = !state.isSending
                 )
 
@@ -163,7 +163,7 @@ fun TopFloatingActions(
         Surface(
             onClick = onMenuClick,
             shape = CircleShape,
-            color = theme.colors.secondary,
+            color = theme.colors.secondaryColor,
             shadowElevation = 8.dp
         ) {
             Box(
@@ -172,7 +172,8 @@ fun TopFloatingActions(
             ) {
                 Icon(
                     imageVector = Icons.Default.Menu,
-                    modifier = Modifier.size(28.dp),
+                    modifier = Modifier.size(32.dp),
+                    tint = theme.colors.disabledIconColor,
                     contentDescription = "Abrir Menu"
                 )
             }
@@ -200,7 +201,7 @@ fun TopFloatingActions(
                     } else {
                         "Ativar conversa temporária"
                     },
-                    modifier = Modifier.size(28.dp),
+                    modifier = Modifier.size(32.dp),
                     tint = animatedIconColor
                 )
             }
@@ -244,7 +245,6 @@ fun MiddleTextAndImage(
                 top = 24.dp,
                 bottom = 24.dp
             ),
-
         )
     }
 }

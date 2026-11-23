@@ -5,10 +5,11 @@ import androidx.compose.ui.graphics.Color
 data class DroidMasterColors(
 
 //  GENERAL APP COLORS
-    val primary: Color,
-    val secondary: Color,
-    val tertiary: Color,
-    val quaternary: Color,
+    val primaryColor: Color,
+    val secondaryColor: Color,
+    val tertiaryColor: Color,
+    val backgroundColor: Color,
+    val textColor: Color,
 
 //  USER COLORS
     val userBubbleColor: Color,
@@ -32,10 +33,11 @@ data class DroidMasterColors(
 object DroidMasterPalettes {
 
     val main = DroidMasterColors(
-        primary = Color(0xFFFF7A59),
-        secondary = Color(0xFFFFE6DC),
-        tertiary = Color(0xFFA84F35),
-        quaternary = Color.White,
+        primaryColor = Color(0xFFFF7A59),
+        secondaryColor = Color(0xFFFFE6DC),
+        tertiaryColor = Color(0xFFA84F35),
+        backgroundColor = Color.White,
+        textColor = Color.Black,
 
         userBubbleColor = Color(0xFFFF7A59),
         userTextColor = Color.White,
@@ -49,14 +51,15 @@ object DroidMasterPalettes {
         buttonColor = Color(0xFFFF7A59),
         disabledButtonColor = Color(0xFFFFE6DC),
         iconColor = Color.White,
-        disabledIconColor = Color.Black
+        disabledIconColor = Color(0xFFA84F35)
     )
 
     val ocean = DroidMasterColors(
-        primary = Color(0xFF1976D2),
-        secondary = Color(0xFFE3F2FD),
-        tertiary = Color(0xFF0D47A1),
-        quaternary = Color.White,
+        primaryColor = Color(0xFF1976D2),
+        secondaryColor = Color(0xFFE3F2FD),
+        tertiaryColor = Color(0xFF0D47A1),
+        backgroundColor = Color.White,
+        textColor = Color.Black,
 
         userBubbleColor = Color(0xFF1976D2),
         userTextColor = Color.White,

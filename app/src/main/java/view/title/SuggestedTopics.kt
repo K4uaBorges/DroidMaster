@@ -131,7 +131,7 @@ fun SuggestedTopicsView(
                 shape = RoundedCornerShape(18.dp),
                 border = BorderStroke(
                     width = 1.dp,
-                    color = theme.colors.primary
+                    color = theme.colors.primaryColor
                 ),
                 color = theme.colors.bubbleColor
             ) {
@@ -143,7 +143,7 @@ fun SuggestedTopicsView(
                 ) {
                     Text(
                         text = topic.title,
-                        color = theme.colors.primary,
+                        color = theme.colors.primaryColor,
                         fontSize = 18.sp,
                         maxLines = 2,
                         textAlign = TextAlign.Center,

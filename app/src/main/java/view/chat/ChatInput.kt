@@ -136,6 +136,7 @@ fun ChatInput(
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowUpward,
+                    modifier = Modifier.size(30.dp),
                     contentDescription = "Enviar Mensagem",
                     tint =
                         if (theme.animations.isEnabled)

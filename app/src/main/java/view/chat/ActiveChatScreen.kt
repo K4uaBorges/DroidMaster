@@ -1,7 +1,5 @@
 package view.chat
 
-import DroidMaster.apps.R
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,22 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.sp
 import controller.ChatController
 import controller.SharedController
 import model.Message
@@ -42,21 +30,12 @@ import java.util.Date
 import java.util.Locale
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AvTimer
-import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.WatchLater
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import model.Author
-import view.theme.DroidMasterTheme
 import view.theme.LocalDroidMasterTheme
 
 @Composable
@@ -148,7 +127,7 @@ fun TopFloatingActions(
         Surface(
             onClick = onMenuClick,
             shape = CircleShape,
-            color = theme.colors.secondary,
+            color = theme.colors.secondaryColor,
             shadowElevation = 8.dp
         ) {
             Box(
@@ -166,7 +145,7 @@ fun TopFloatingActions(
         // Botão partilha em círculo.
         Surface(
             shape = CircleShape,
-            color = theme.colors.secondary,
+            color = theme.colors.secondaryColor,
             shadowElevation = 8.dp
         ) {
             Box(
