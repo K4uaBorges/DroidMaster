@@ -45,6 +45,13 @@ import java.util.Date
 import java.util.Locale
 import kotlin.uuid.Uuid
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+
 
 @Composable
 fun MenuDrawerView(
@@ -60,15 +67,28 @@ fun MenuDrawerView(
 ) {
 
     val theme = LocalDroidMasterTheme.current
+    var searching by rememberSaveable(isOpen) { mutableStateOf(false) }
+    var query by rememberSaveable(isOpen) { mutableStateOf("") }
+
+    fun closeSearch() {
+        searching = false
+        query = ""
+    }
+
+    val filteredConversations = if (searching && query.isNotBlank()) {
+        conversations.filter { conversation ->
+            conversation.title.contains(query.trim(), ignoreCase = true)
+        }
+    } else {
+        conversations
+    }
 
     val duration = if (theme.animations.isEnabled) {
         theme.animations.durationMillis
     } else 0
 
-    BackHandler(                                        // Quando o botão "back" do android for pressioando.
-        enabled = isOpen
-    ) {
-        onClose()
+    BackHandler(enabled = isOpen) {
+        if (searching) closeSearch() else onClose()
     }
 
     Box(
@@ -143,10 +163,26 @@ fun MenuDrawerView(
                     ) {
 
                         MenuHeaderView(
+                            searching = searching,
+                            onSearchClick = {
+                                if (searching) closeSearch() else searching = true
+                            },
                             onLogoClick = onTitleScreenClick
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
+
+                        AnimatedVisibility(
+                            visible = searching,
+                            enter = expandVertically(animationSpec = tween(duration)),
+                            exit = shrinkVertically(animationSpec = tween(duration))
+                        ) {
+                            SearchInput(
+                                value = query,
+                                onValueChange = { query = it },
+                                modifier = Modifier.padding(bottom = 12.dp)
+                            )
+                        }
 
                         Surface(
                             modifier = Modifier
@@ -155,15 +191,20 @@ fun MenuDrawerView(
                             shape = RoundedCornerShape(24.dp),
                             color = theme.colors.bubbleColor
                         ) {
-
-                            MenuHistoryView(
-                                conversations = conversations,
-                                onConversationClick = onConversationClick,
-                                modifier = Modifier.weight(1f)
-                            )
+                            if (searching && filteredConversations.isEmpty()) {
+                                Text(
+                                    text = if (query.isBlank()) "Histórico vazio" else "Nenhuma conversa encontrada",
+                                    color = theme.colors.inputTextColor,
+                                    modifier = Modifier.padding(16.dp)
+                                )
+                            } else {
+                                MenuHistoryView(
+                                    conversations = filteredConversations,
+                                    onConversationClick = onConversationClick,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
                         }
-
-                        Spacer(modifier = Modifier.height(12.dp))
 
                         MenuActionsView(
                             onNewChatClick = onNewChatClick,

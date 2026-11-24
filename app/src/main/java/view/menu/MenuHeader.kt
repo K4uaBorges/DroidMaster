@@ -22,11 +22,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import view.theme.LocalDroidMasterTheme
+import androidx.compose.material.icons.filled.Close
 
 
 @Composable
 fun MenuHeaderView(
     modifier: Modifier = Modifier,
+    searching: Boolean,
+    onSearchClick: () -> Unit,
     onLogoClick: () -> Unit
 ) {
 
@@ -65,18 +68,16 @@ fun MenuHeaderView(
                 )
             }
         }
-
         Surface(
+            onClick = onSearchClick,
             modifier = Modifier.size(56.dp),
             shape = CircleShape,
             color = theme.colors.bubbleColor
         ) {
-            Box(
-                contentAlignment = Alignment.Center
-            ) {
+            Box(contentAlignment = Alignment.Center) {
                 Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Pesquisa de Conversas",
+                    imageVector = if (searching) Icons.Default.Close else Icons.Default.Search,
+                    contentDescription = if (searching) "Fechar pesquisa" else "Pesquisar conversas",
                     tint = theme.colors.tertiaryColor,
                     modifier = Modifier.size(32.dp)
                 )
