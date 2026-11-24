@@ -8,6 +8,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -74,6 +75,21 @@ fun MenuDrawerView(
         modifier = modifier.fillMaxSize()
     ) {
 
+        if (isOpen) {                                   // Para quando clickamos fora do menu, ele fechar.
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .fillMaxWidth(1f / 8f)
+                    .fillMaxHeight()
+                    .clickable(
+                        interactionSource = null,       // Retiramos as animações do clickable.
+                        indication = null,
+                        onClick = onClose
+                    )
+
+            )
+        }
+
         AnimatedVisibility(
             visible = isOpen,
             modifier = Modifier
@@ -105,7 +121,7 @@ fun MenuDrawerView(
                             align = Alignment.Start,
                             unbounded = true
                         )
-                        .offset(x = -borderOffset)
+                        .offset(x = - borderOffset)
                         .width(maxWidth + borderOffset),
                     shape = RoundedCornerShape(
                         topStart = 0.dp,
@@ -117,8 +133,7 @@ fun MenuDrawerView(
                         width = 3.dp,
                         color = theme.colors.tertiaryColor
                     ),
-                    color = theme.colors.backgroundColor,
-                    shadowElevation = 12.dp
+                    color = theme.colors.backgroundColor
                 ) {
 
                     Column(
@@ -126,17 +141,29 @@ fun MenuDrawerView(
                             .fillMaxSize()
                             .padding(12.dp)
                     ) {
+
                         MenuHeaderView(
                             onLogoClick = onTitleScreenClick
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        MenuHistoryView(
-                            conversations = conversations,
-                            onConversationClick = onConversationClick,
-                            modifier = Modifier.weight(1f)
-                        )
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            shape = RoundedCornerShape(24.dp),
+                            color = theme.colors.bubbleColor
+                        ) {
+
+                            MenuHistoryView(
+                                conversations = conversations,
+                                onConversationClick = onConversationClick,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         MenuActionsView(
                             onNewChatClick = onNewChatClick,

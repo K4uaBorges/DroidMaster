@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -129,11 +130,8 @@ fun SuggestedTopicsView(
                     .weight(1f)
                     .height(76.dp),
                 shape = RoundedCornerShape(18.dp),
-                border = BorderStroke(
-                    width = 1.dp,
-                    color = theme.colors.primaryColor
-                ),
-                color = theme.colors.bubbleColor
+                color = theme.colors.bubbleColor,
+                shadowElevation = 8.dp
             ) {
                 Box(
                     modifier = Modifier
@@ -143,10 +141,11 @@ fun SuggestedTopicsView(
                 ) {
                     Text(
                         text = topic.title,
-                        color = theme.colors.primaryColor,
+                        color = theme.colors.tertiaryColor,
                         fontSize = 18.sp,
                         maxLines = 2,
                         textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
