@@ -115,10 +115,20 @@ fun DroidMasterAppView(
                 onNewChatClick = {
                     currentScreen = Screen.TITLE
                     isMenuOpen = false
+                    if (chatController.isTemporaryChat) {
+                        chatController.exitTemporaryChat()
+                    } else {
+                        chatController.newConversation()
+                    }
                 },
                 onTitleScreenClick = {
                     currentScreen = Screen.TITLE
                     isMenuOpen = false
+                    if (chatController.isTemporaryChat) {
+                        chatController.exitTemporaryChat()
+                    } else {
+                        chatController.newConversation()
+                    }
                 },
                 onSettingsClick = {
                     currentScreen = Screen.SETTINGS

@@ -4,7 +4,9 @@ import kotlinx.coroutines.CompletableDeferred
 import api.interfaces.ChatAssistant
 import errors.GeminiHttpException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import model.Author
@@ -194,6 +196,83 @@ class ConversationControllersTest {
         assertFalse(chat.screenState.isSending)
         assertNull(conversations.screenState.currentConversationId)
         assertTrue(repository.conversations.value.isEmpty())
+    }
+
+    @Test
+    fun streamingResponseIsUpdatedBeforePersistence() = runTest {
+
+        val repository = FakeConversationRepository()
+
+        val conversations = ConversationController(
+            repository,
+            backgroundScope                             // Permite executar coroutines, que observam continuamente os Flows do repositório, durante o teste e cancelá-las automaticamente quando o teste termina.
+        )
+
+        val gate = CompletableDeferred<Unit>()          // Funciona como uma espécie de portão que controla a execução da coroutine.
+
+        val assistant = object : ChatAssistant {        // implementação anónima da interface.
+
+            override suspend fun generate(
+                messages: List<Message>
+            ) : String = error("Deve utilizar streaming.")
+
+            override fun generateStream(
+                messages: List<Message>
+            ): Flow<String> = flow {
+
+                emit("Kotlin")
+
+                gate.await()                // O Flow suspende a sua execução.
+
+                emit(" é uma linguagem.")
+            }
+        }
+
+        val chat = ChatController(
+            conversations,
+            repository,
+            backgroundScope,
+            assistant
+        )
+
+        runCurrent()                    // Executa as tarefas que estão agendadas para o instante virtual atual.
+
+        chat.changeMessageText("O que é Kotlin?")
+
+        val job = chat.sendMessage()
+
+        runCurrent()
+
+        val id = conversations.currentConversationId.value!!
+
+        assertEquals(
+            "Kotlin",
+            chat.screenState.streamingMessage?.text
+        )
+
+        assertTrue(chat.screenState.isSending)
+
+        assertEquals(                   // O QUE É ISTO?
+            1,
+            repository.getMessagesPage(id, 10, 0).size
+        )
+
+        gate.complete(Unit)     // E permitimos que a geração termine.
+
+        job?.join()                     // O QUE É ISTO?
+        runCurrent()
+
+        assertNull(chat.screenState.streamingMessage)
+
+        assertFalse(chat.screenState.isSending)
+
+        assertEquals(
+            listOf(
+                "O que é Kotlin?",
+                "Kotlin é uma linguagem.",
+            ),
+            repository.getMessagesPage(id, 10, 0).map { it.text }
+        )
     }
 }
 

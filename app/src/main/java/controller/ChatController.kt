@@ -18,13 +18,15 @@ import kotlinx.coroutines.launch
 import model.Message
 import model.Author
 import storage.repository.ConversationRepository
+import view.theme.LocalDroidMasterTheme
 import kotlin.uuid.Uuid
 
 data class ChatViewState(
     val messageText: String = "",
     val messages: List<Message> = emptyList(),
     val isSending: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val streamingMessage: Message? = null
 )
 
 class ChatController(
@@ -45,10 +47,19 @@ class ChatController(
 
     init {
         scope.launch {
+
             conversationController.currentConversationId.collectLatest { conversationId ->
+
                 if (isTemporaryChat) return@collectLatest                   // impede que o observador das conversas guardadas substitua as mensagens temporárias enquanto estivermos nesse modo.
-                screenState = screenState.copy(messages = emptyList())
+
+                screenState = screenState.copy(
+                    messages = emptyList(),
+                    streamingMessage = screenState.streamingMessage?.takeIf {
+                        it.conversationId == conversationId
+                    })
+
                 if (conversationId != null) {
+
                     repository.observeMessages(conversationId)
                         .catch { screenState = screenState.copy(error = "Não foi possível carregar as mensagens.") }
                         .collect { messages -> screenState = screenState.copy(messages = messages) }
@@ -57,32 +68,91 @@ class ChatController(
         }
     }
 
+    private suspend fun collectResponse(
+        provider: ChatAssistant,
+        history: List<Message>,
+        conversationId: Uuid,
+        isVisible: () -> Boolean        // Importante para evitar o problema das mensagens aparecerem nas conversas erradas.
+    ) : String {
+
+        val response = StringBuilder()
+
+        val order = (history.lastOrNull()?.order ?: 0L) + 1L    // VER O QUE É ISTO
+        val timestamp = System.currentTimeMillis()
+
+        provider.generateStream(history).collect { fragment ->
+
+            response.append(fragment)
+
+            if (isVisible() && response.isNotBlank()) {
+
+                screenState = screenState.copy(
+                    streamingMessage = Message(
+                        order = order,
+                        conversationId = conversationId,
+                        role = Author.MODEL,
+                        text = response.toString(),
+                        timestamp = timestamp
+                    )
+                )
+            }
+        }
+
+        if (response.isBlank()) {
+            throw GeminiEmptyResponseException()
+        }
+
+        return response.toString()
+    }
+
     fun changeMessageText(nextText: String) {
         screenState = screenState.copy(messageText = nextText)
     }
 
     fun sendMessage(): Job? {
         val text = screenState.messageText.trim()
+
         if (text.isEmpty() || screenState.isSending) return null
+
         if (isTemporaryChat) return sendTemporaryMessage(text)
+
         val conversationId = conversationController.currentConversationId.value
         val selectionVersion = conversationController.selectionVersion
+
         screenState = screenState.copy(messageText = "", isSending = true, error = null)
+
         return scope.launch {
             var savedId: Uuid? = null
             var activeVersion = selectionVersion
+
             try {
                 savedId = repository.appendUserMessage(conversationId, text)
                 // A completed save must not take the user back to a chat they have left.
+
                 if (conversationController.selectionVersion == selectionVersion) {
+
                     conversationController.selectSavedConversation(savedId)
                     activeVersion = conversationController.selectionVersion
+
                 }
+
                 assistant?.let {
                     val history = repository.observeMessages(savedId).first()
-                    val answer = it.generate(history)
+
+                    val answer = collectResponse(
+                        provider = it,
+                        history = history,
+                        conversationId = savedId,
+                        isVisible = {
+                            !isTemporaryChat &&
+                                    conversationController.currentConversationId.value == savedId
+                        }
+                    )
+
                     repository.appendMessage(savedId, Author.MODEL, answer)
+                        // Só chegamos aqui depois da recolha do Flow.
                 }
+
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
@@ -93,7 +163,12 @@ class ChatController(
                     )
                 }
             } finally {
-                screenState = screenState.copy(isSending = false)
+                if (!isTemporaryChat) {
+                    screenState = screenState.copy(
+                        isSending = false,
+                        streamingMessage = null
+                    )
+                }
             }
         }
     }
@@ -115,40 +190,78 @@ class ChatController(
     }
 
     fun retryResponse(): Job? {
+
         val conversationId = conversationController.currentConversationId.value ?: return null
         val provider = assistant ?: return null
-        if (screenState.isSending || screenState.messages.lastOrNull()?.role != Author.USER) return null
         val version = conversationController.selectionVersion
-        screenState = screenState.copy(isSending = true, error = null)
+
+        if (screenState.isSending || screenState.messages.lastOrNull()?.role != Author.USER) return null
+
+        screenState = screenState.copy(
+            isSending = true,
+            error = null
+        )
+
         return scope.launch {
             try {
                 val history = repository.observeMessages(conversationId).first()
-                val answer = provider.generate(history)
+
+                val answer = collectResponse(
+                    provider = provider,
+                    history = history,
+                    conversationId = conversationId,
+                    isVisible = {
+                        !isTemporaryChat &&
+                                conversationController.currentConversationId.value == conversationId
+                    }
+                )
+
                 repository.appendMessage(conversationId, Author.MODEL, answer)
+                    // Só chegamos aqui depois da recolha do Flow.
+
             } catch (error: CancellationException) {
                 throw error
+
             } catch (error: Exception) {
                 if (conversationController.selectionVersion == version) {
                     screenState = screenState.copy(error = errorMessage(error))
                 }
+
             } finally {
-                screenState = screenState.copy(isSending = false)
+                if (!isTemporaryChat) {
+                    screenState = screenState.copy(
+                        isSending = false,
+                        streamingMessage = null
+                    )
+                }
             }
         }
     }
 
     fun openConversation(conversationId: Uuid) {
+
         val isCurrent = conversationController.currentConversationId.value == conversationId
+
         if (conversationController.selectConversation(conversationId)) {
+
             screenState = screenState.copy(
-                messageText = "", messages = if (isCurrent) screenState.messages else emptyList(), error = null
+                messageText = "",
+                messages = if (isCurrent) screenState.messages else emptyList(),
+                error = null,
+                streamingMessage = if (isCurrent) screenState.streamingMessage else null
             )
         }
     }
 
     fun newConversation() {
+
         conversationController.newConversation()
-        screenState = screenState.copy(messageText = "", messages = emptyList(), error = null)
+
+        screenState = screenState.copy(
+            messageText = "",
+            messages = emptyList(),
+            error = null,
+            streamingMessage = null)
     }
 
 
@@ -192,6 +305,7 @@ class ChatController(
     }
 
     private fun sendTemporaryMessage(text: String) : Job? {
+
         val provider = assistant ?: return null
         val version = temporaryVersion
         val conversationId = temporaryConversationId
@@ -215,8 +329,14 @@ class ChatController(
 
         val job = scope.launch {
             try {
-                val answer = provider.generate(history)
-                    // Envia ao Gemini todas as mensagens da conversa temporária.
+                val answer = collectResponse(
+                    provider = provider,
+                    history = history,
+                    conversationId = conversationId,
+                    isVisible = {
+                        isTemporaryChat && temporaryVersion == version
+                    }
+                )
 
                 if (isTemporaryChat && temporaryVersion == version) {
                     // Verifica se ainda estamos na mesma sessão temporária.
@@ -244,7 +364,9 @@ class ChatController(
 
             } finally {
                 if (isTemporaryChat && temporaryVersion == version) {
-                    screenState = screenState.copy(isSending = false)
+                    screenState = screenState.copy(
+                        isSending = false,
+                        streamingMessage = null)
                 }
             }
         }

@@ -15,6 +15,7 @@ import io.ktor.http.headersOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
@@ -23,6 +24,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
+import kotlin.time.Duration.Companion.milliseconds
 
 class GeminiAPITest {
     private val jsonHeaders = headersOf(HttpHeaders.ContentType, "application/json")
@@ -97,7 +99,7 @@ class GeminiAPITest {
 
     @Test
     fun waitingRequestSuspendsAndCanBeCancelled() = runBlocking {
-        withTimeout(5000) {
+        withTimeout(5000.milliseconds) {
             val started = CompletableDeferred<Unit>()
             val releaseResponse = CompletableDeferred<Unit>()
             val client = createGeminiClient(MockEngine {
@@ -117,6 +119,99 @@ class GeminiAPITest {
                 releaseResponse.complete(Unit)
                 client.close()
             }
+        }
+    }
+
+    @Test
+    fun sendsCustomSystemInstruction() = runBlocking {
+
+        val instruction = SystemInstructions.TITLE_GENERATOR
+
+        val history = userContents("Explica-me o que é um Flow.")
+
+        val client = createGeminiClient(MockEngine { request ->
+
+            val body = Json.decodeFromString<GeminiRequest>(
+                (request.body as TextContent).text
+            )
+
+            assertEquals(
+                instruction,
+                body.systemInstruction.parts.single().text
+            )
+
+            assertEquals(
+                history,
+                body.contents
+            )
+
+            respond(
+                """{"candidates":[{"content":{"parts":[{"text":"Introdução ao Flow"}]}}]}""",
+                HttpStatusCode.OK,
+                jsonHeaders
+            )
+        })
+
+        client.use { client ->                                                          // Mesma coisa que o try-finally.
+            val api = GeminiAPI(client, "test-key", "test-model")
+
+            val title = api.generate(history, instruction)
+
+            assertEquals(
+                "Introdução ao Flow",
+                title
+            )
+        }
+    }
+
+    @Test
+    fun receivesStreamFragmentsInOrder() = runBlocking {
+
+        val stream = """
+            data: {"candidates":[{"content":{"parts":[{"text":"Kotlin"}]}}]}
+
+            data: {"candidates":[{"content":{"parts":[{"text":" é uma linguagem"}]}}]}
+
+            data: {"candidates":[{"content":{"parts":[{"text":" de programação."}]}}]}
+
+            data: {"candidates":[{"finishReason":"STOP"}]}
+        """.trimIndent() + "\n\n"
+
+        val client = createGeminiClient(MockEngine { request ->
+
+            assertEquals(HttpMethod.Post, request.method)
+
+            assertTrue(request.url.toString().contains("streamGenerateContent"))
+
+
+            assertEquals("sse", request.url.parameters["alt"])
+
+            respond(
+                stream,
+                HttpStatusCode.OK,
+                headersOf(
+                    HttpHeaders.ContentType,
+                    "text/event-stream"
+                )
+            )
+        })
+
+        client.use { client ->
+
+            val api = GeminiAPI(client, "test-key", "test-model")
+
+            val fragments = api.generateStream(
+                userContents("O que é Kotlin?")
+            ).toList()
+
+            assertEquals(
+                listOf(
+                    "Kotlin",
+                    " é uma linguagem",
+                    " de programação."
+                ),
+                fragments
+            )
         }
     }
 }

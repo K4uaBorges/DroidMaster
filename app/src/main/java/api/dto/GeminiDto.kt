@@ -1,5 +1,6 @@
 ﻿package api.dto
 
+import com.google.firebase.ai.type.FinishReason
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -10,7 +11,7 @@ data class GeminiRequest(
 
 @Serializable
 data class GeminiContent(
-    val parts: List<GeminiPart>,
+    val parts: List<GeminiPart> = emptyList(),
     val role: String? = null
 )
 
@@ -27,5 +28,6 @@ data class GeminiResponse(
 
 @Serializable
 data class GeminiCandidate(
-    val content: GeminiContent? = null
+    val content: GeminiContent? = null,
+    val finishReason: String? = null
 )
